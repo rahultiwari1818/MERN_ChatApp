@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import axios from "axios";
+import { Container, Box, TextField, Button, Typography } from "@mui/material";
 
 export default function RegistrationForm() {
   const [data, setData] = useState({
@@ -16,73 +17,87 @@ export default function RegistrationForm() {
     });
   };
 
-  const handleSubmission = async(e) => {
+  const handleSubmission = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-	try {
-		const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/v1/user/register`,data);
-
-		
-	} catch (error) {
-		
-	}
-
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BASE_URL}/api/v1/user/register`,
+        data
+      );
+      console.log("Registration successful:", response.data);
+    } catch (error) {
+      console.error("Error during registration:", error);
+    }
   };
 
   return (
-      <form
-        className='bg-white p-6 md:p-10  shadow-md '
-        method="post"
+    <Container maxWidth="xs">
+      <Box
+        component="form"
         onSubmit={handleSubmission}
+        sx={{
+          mt: 4,
+          p: 3,
+          boxShadow: 3,
+          borderRadius: 2,
+          backgroundColor: "white"
+        }}
       >
-        <h2 className='text-2xl font-bold mb-1 text-center'>Welcome</h2>
-		<h2 className='text-xl font-semibold mb-6 text-center'>Sign up now to get started</h2>
-		
-        <div className='mb-4'>
-          <label htmlFor="name" className='block text-gray-700 text-sm font-bold mb-2'>Name</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={data.name}
-            onChange={handleInputChange}
-            className='w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-            required
-            placeholder='Your Name'
-          />
-        </div>
-        <div className='mb-4'>
-          <label htmlFor="email" className='block text-gray-700 text-sm font-bold mb-2'>Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={data.email}
-            onChange={handleInputChange}
-            className='w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-            required
-            placeholder='Your Email'
-          />
-        </div>
-        <div className='mb-4'>
-          <label htmlFor="password" className='block text-gray-700 text-sm font-bold mb-2'>Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={data.password}
-            onChange={handleInputChange}
-            className='w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-            required
-            placeholder='Your Password'
-          />
-        </div>
-        <button
+        <Typography variant="h4" component="h2" align="center" fontWeight="bold" mb={1}>
+          Welcome
+        </Typography>
+        <Typography variant="h6" component="h3" align="center" mb={4}>
+          Sign up now to get started
+        </Typography>
+        <TextField
+          fullWidth
+          label="Name"
+          name="name"
+          value={data.name}
+          onChange={handleInputChange}
+          variant="outlined"
+          margin="normal"
+          required
+          placeholder="Your Name"
+        />
+        <TextField
+          fullWidth
+          label="Email"
+          name="email"
+          type="email"
+          value={data.email}
+          onChange={handleInputChange}
+          variant="outlined"
+          margin="normal"
+          required
+          placeholder="Your Email"
+        />
+        <TextField
+          fullWidth
+          label="Password"
+          name="password"
+          type="password"
+          value={data.password}
+          onChange={handleInputChange}
+          variant="outlined"
+          margin="normal"
+          required
+          placeholder="Your Password"
+        />
+        <Button
+          fullWidth
           type="submit"
-          className='w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50'
+          variant="contained"
+          color="primary"
+          sx={{
+            mt: 2,
+            py: 1.5,
+            fontWeight: "bold"
+          }}
         >
           Register
-        </button>
-      </form>
+        </Button>
+      </Box>
+    </Container>
   );
 }
