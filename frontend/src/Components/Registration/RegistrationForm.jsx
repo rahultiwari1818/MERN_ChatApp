@@ -9,6 +9,10 @@ export default function RegistrationForm() {
     password: ""
   });
 
+  const [otp, setOTP] = useState("");
+  const [isOTPVisible, setIsOTPVisible] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setData({
@@ -17,17 +21,28 @@ export default function RegistrationForm() {
     });
   };
 
+  const handleOTPChange = (e) => {
+    setOTP(e.target.value);
+  };
+
+  const getOTP = async () => {
+    try {
+      setIsDisabled(true); // Disable inputs and button
+      console.log(process.env.REACT_APP_API_URL)
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/verifyUser`, {
+        email: data.email
+      });
+      console.log(response.data); // Handle response if needed
+      setIsOTPVisible(true); // Show OTP input
+    } catch (error) {
+      console.error("Error verifying user:", error);
+      setIsDisabled(false); // Re-enable inputs and button in case of error
+    }
+  };
+
   const handleSubmission = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_BASE_URL}/api/v1/user/register`,
-        data
-      );
-      console.log("Registration successful:", response.data);
-    } catch (error) {
-      console.error("Error during registration:", error);
-    }
+    getOTP();
   };
 
   return (
@@ -59,6 +74,7 @@ export default function RegistrationForm() {
           margin="normal"
           required
           placeholder="Your Name"
+          disabled={isDisabled}
         />
         <TextField
           fullWidth
@@ -71,6 +87,7 @@ export default function RegistrationForm() {
           margin="normal"
           required
           placeholder="Your Email"
+          disabled={isDisabled}
         />
         <TextField
           fullWidth
@@ -83,7 +100,21 @@ export default function RegistrationForm() {
           margin="normal"
           required
           placeholder="Your Password"
+          disabled={isDisabled}
         />
+        {isOTPVisible && (
+          <TextField
+            fullWidth
+            label="Enter OTP"
+            name="otp"
+            value={otp}
+            onChange={handleOTPChange}
+            variant="outlined"
+            margin="normal"
+            required
+            placeholder="Enter 6-digit OTP"
+          />
+        )}
         <Button
           fullWidth
           type="submit"
@@ -94,6 +125,7 @@ export default function RegistrationForm() {
             py: 1.5,
             fontWeight: "bold"
           }}
+          disabled={isDisabled}
         >
           Register
         </Button>
