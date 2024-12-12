@@ -73,7 +73,9 @@ export const sendOTP = async(req,res)=>{
             })
         }
         else{
-            console.log(res.message)
+            return res.status(500).json({
+                error:resp.message
+            }) 
         }
         
     } catch (error) {

@@ -1,7 +1,7 @@
-import { Router } from "express";
+import express from "express";
 import { registerUser, sendOTP, verifyOTP } from "../controllers/user.controller.js";
 
-const router = Router();
+const router = express.Router();
 
 router.post("/register",registerUser);
 router.post("/verifyUser",sendOTP);

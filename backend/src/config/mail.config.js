@@ -1,9 +1,5 @@
 import nodemailer from "nodemailer";
 import { createHTMLBody } from "../utils/utils.js";
-import dotenv from "dotenv"
-dotenv.config();
-
-
 const mailTransport = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -23,13 +19,19 @@ export const sendMail = async (to, subject, body) => {
             subject,
             html: createHTMLBody(body)
         }
-        mailTransport.sendMail(mail);
 
-        return  {
-                    result: true,
-                    message: "Mail Sent Successfully.!"
-                };
+        
+        const result = await new Promise((resolve, reject) => {
+            mailTransport.sendMail(mail, (err, info) => {
+                if (err) {
+                    reject({ result: false, message: err.message });
+                } else {
+                    resolve({ result: true, message: "Mail Sent Successfully.!" });
+                }
+            });
+        });
 
+        return result;
 
 
     } catch (error) {
@@ -39,4 +41,3 @@ export const sendMail = async (to, subject, body) => {
         }
     }
 }
-
