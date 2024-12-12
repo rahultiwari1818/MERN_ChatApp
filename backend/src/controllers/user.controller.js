@@ -8,10 +8,12 @@ export const registerUser = async(req,res) =>{
     try {
 
         const {mail , password , name} = req.body;
-        if([password , name,mail].some("") || [password , name,mail].some(undefined))  return res.status(400).json({message:"Please Provide All The Required Fields.!",result:false});
-        const hashedPasswd = generateHashPassword(password);
+        if([password , name,mail].some(val => val === "" || val === undefined) )  return res.status(400).json({message:"Please Provide All The Required Fields.!",result:false});
+        const hashedPasswd = await generateHashPassword(password);
         await User.create({
-            name,mail,hashedPasswd
+            email : mail,
+            name,
+            password:hashedPasswd
         })
 
         return res.status(201).json({
@@ -20,6 +22,7 @@ export const registerUser = async(req,res) =>{
         })
         
     } catch (error) {
+        console.log(error);
         return res.status(500).json({
             error
         })
@@ -30,7 +33,7 @@ export const loginUser = async(req,res,next) => {
     try {
 
         const {mail,password} = req.body;
-        if([password,mail].some("") || [password,mail].some(undefined))  return res.status(400).json({message:"Please provide Email and Password!",result:false});
+        if([password,mail].some(val => val ==="" || val === undefined))  return res.status(400).json({message:"Please provide Email and Password!",result:false});
         const user = await User.findOne({email:mail});
         if(!user){
             return res.status(400).json({
@@ -39,7 +42,7 @@ export const loginUser = async(req,res,next) => {
             })
         }
 
-        if(!verifyPassword(password,user.password)) return res.status(401).json({message:"Incorrect Password",result:false});
+        if(!await verifyPassword(password,user.password)) return res.status(401).json({message:"Incorrect Password",result:false});
         const token = generateToken({_id:user._id,name:user.name,email:user.email});
         return res.status(200).json({
             message:"User Loggedin Successfully.!",
@@ -63,7 +66,7 @@ export const sendOTP = async(req,res)=>{
         const mail = req.body?.email;
         if(!mail) return res.status(400).json({message:"Please provide Email.!",result:false});
         const otp = generateOTP();
-        client.set(mail,otp);
+        await client.set(mail,otp);
         
         const resp = await sendMail(mail,"Verification OTP",`Your OTP is ${otp}`);
         if(resp.result){
@@ -90,12 +93,13 @@ export const sendOTP = async(req,res)=>{
 export const verifyOTP = async(req,res) =>{
     try {
         const {mail,otp} = req.body;
-        if([otp,mail].some("") || [otp,mail].some(undefined))  return res.status(400).json({message:"Please provide Email and OTP!",result:false});
+        if ([otp, mail].some(value => value === "" || value === undefined)) {
+            return res.status(400).json({ message: "Please provide Email and OTP!", result: false });
+          }
         const storedOTP = await client.get(mail);
         if(storedOTP === otp ){
             await client.del(mail);
-            const user = await User.findOne({email:mail},{password:0});
-            const token = generateToken(user);
+            const token =  generateToken({email:mail});
             return res.status(200).json({
                 message:"User Verified Succcessfully",
                 token,
@@ -109,6 +113,7 @@ export const verifyOTP = async(req,res) =>{
            })
         }
     } catch (error) {
+        console.log(error)
         return res.status(500).json({
             error
         })    

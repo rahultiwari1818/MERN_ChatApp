@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import axios from "axios";
-import { Container, Box, TextField, Button, Typography } from "@mui/material";
+import { Container, Box, TextField, Button, Typography, Grid } from "@mui/material";
+import OtpInput from "../OTPInput/OtpInput.jsx";
+import { toast } from "react-toastify";
+import Overlay from "../Common/Overlay.jsx";
 
 export default function RegistrationForm() {
-  const [data, setData] = useState({
-    name: "",
-    email: "",
-    password: ""
-  });
-
+  const [data, setData] = useState({ name: "", email: "", password: "" });
   const [otp, setOTP] = useState("");
   const [isOTPVisible, setIsOTPVisible] = useState(false);
   const [isDisabled, setIsDisabled] = useState(false);
+
+  const [showOverlay,setShowOverlay] = useState(false);
+
+  const changeOTP = useCallback((newOTP)=>{
+      setOTP(()=>newOTP)
+  },[]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -21,22 +25,56 @@ export default function RegistrationForm() {
     });
   };
 
-  const handleOTPChange = (e) => {
-    setOTP(e.target.value);
+  const handleOTPChange = (e, index) => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value)) {
+      const updatedOTP = [...otp];
+      updatedOTP[index] = value;
+      setOTP(updatedOTP);
+
+      // Focus on the next input if a digit is entered
+      if (value && index < 5) {
+        document.getElementById(`otp-${index + 1}`).focus();
+      }
+    }
+  };
+
+  const handleOTPPaste = (e) => {
+    const pastedData = e.clipboardData.getData("text").trim();
+    if (/^\d{6}$/.test(pastedData)) {
+      setOTP(pastedData.split(""));
+      for (let i = 0; i < 6; i++) {
+        document.getElementById(`otp-${i}`).value = pastedData[i];
+      }
+    }
   };
 
   const getOTP = async () => {
     try {
-      setIsDisabled(true); // Disable inputs and button
-      console.log(process.env.REACT_APP_API_URL)
+      setIsDisabled(true);
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/verifyUser`, {
         email: data.email
       });
-      console.log(response.data); // Handle response if needed
-      setIsOTPVisible(true); // Show OTP input
+      toast.success(response.data.message);
+      setIsOTPVisible(true);
     } catch (error) {
       console.error("Error verifying user:", error);
-      setIsDisabled(false); // Re-enable inputs and button in case of error
+      setIsDisabled(false);
+    }
+  };
+
+  const verifyOTP = async () => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/verifyOTP`, {
+        mail: data.email,
+        otp: otp
+      });
+      setShowOverlay(()=>true);
+      registerUser();
+
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      toast.error(error.response.message);
     }
   };
 
@@ -45,7 +83,35 @@ export default function RegistrationForm() {
     getOTP();
   };
 
+  const registerUser = async() =>{
+      try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/register`, {
+          mail: data.email,
+          name : data.name,
+          password : data.password
+        });
+
+        setShowOverlay(false);
+        setData(()=>{
+          return {
+            name: "", email: "", password: ""
+          }
+        })
+        setOTP("");
+        setIsDisabled(false);
+        setIsOTPVisible(false);
+
+      } catch (error) {
+          console.log("Registration Error : ",error);
+      }
+  }
+
   return (
+    <>
+    {
+      showOverlay && 
+      <Overlay/>
+    }
     <Container maxWidth="xs">
       <Box
         component="form"
@@ -102,34 +168,41 @@ export default function RegistrationForm() {
           placeholder="Your Password"
           disabled={isDisabled}
         />
-        {isOTPVisible && (
-          <TextField
-            fullWidth
-            label="Enter OTP"
-            name="otp"
-            value={otp}
-            onChange={handleOTPChange}
-            variant="outlined"
-            margin="normal"
-            required
-            placeholder="Enter 6-digit OTP"
-          />
-        )}
         <Button
           fullWidth
           type="submit"
           variant="contained"
           color="primary"
-          sx={{
-            mt: 2,
-            py: 1.5,
-            fontWeight: "bold"
-          }}
+          sx={{ mt: 2, py: 1.5, fontWeight: "bold" }}
           disabled={isDisabled}
         >
           Register
         </Button>
+        {isOTPVisible && (
+          <Box mt={3}>
+            <Typography variant="h6" align="center" mb={2}>
+              Enter OTP
+            </Typography>
+            <Box >
+                <OtpInput
+                otp={otp}
+                setOtp={changeOTP}
+                />
+              </Box>
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              sx={{ mt: 3, py: 1.5, fontWeight: "bold" }}
+              onClick={verifyOTP}
+            >
+              Verify OTP
+            </Button>
+          </Box>
+        )}
+    
       </Box>
     </Container>
+    </>
   );
 }

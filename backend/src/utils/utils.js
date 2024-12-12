@@ -55,7 +55,7 @@ export function createHTMLBody(body) {
         <body>
             <div class="container">
                 <div class="header">
-                    <strong>Your Mail Header</strong>
+                    <strong>Chat App</strong>
                 </div>
                 <div class="content">
                     ${body}
@@ -75,10 +75,13 @@ export function generateToken(data){
     return jwtToken.sign(data,process.env.SECRET_KEY);
 }
 
-export function generateHashPassword(password){
-    bcrypt.hash(password, 10, function(err, hash) {
-        return hash;
-    });
+export async function  generateHashPassword(password){
+    return await new Promise((resolve,reject) =>{
+        bcrypt.hash(password, 10, function(err, hash) {
+            resolve(hash);
+        });
+    })
+
 }
 
 export async function verifyPassword(password,hashedPassword){
