@@ -3,7 +3,7 @@ import { ColorRing } from 'react-loader-spinner';
 
 export default function Overlay() {
     return (
-        <section className=' fixed h-screen w-screen bg-slate-50 flex items-center justify-center '>
+        <section className=' fixed h-screen w-screen bg-slate-50 z-10 top-0 flex items-center justify-center '>
             <ColorRing
                 visible={true}
                 height="80"
