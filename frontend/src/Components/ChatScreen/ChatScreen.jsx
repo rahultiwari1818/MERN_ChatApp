@@ -1,6 +1,7 @@
 import { Box, Button, Container, TextField } from '@mui/material'
-import React from 'react'
+import React, { useState } from 'react'
 import Message from '../Message/Message';
+import SendButtonImage from "../../Assets/Images/SendButton.png";
 
 const messages = [
     { senderId: "1", recipientId: "2", message: "Hello!", timestamp: new Date("2024-12-11T09:00:00Z") },
@@ -40,31 +41,43 @@ const messages = [
 
 
 export default function ChatScreen() {
+
+    const [messageToBeSent,setMessageToBeSent] = useState("");
+
+
+    const sendMessage = async(e) =>{
+
+    }
+
     return (
-        <Container>
-            <Box>
+        <Container className='h-[90vh] fixed right-0 overflow-scroll'>
+            <Box className="mb-10">
                 {
                     messages?.map((message) => {
                         return <Message message={message.message} time={message.timestamp.toDateString()} isSender={message.senderId === '1'} />
                     })
                 }
             </Box>
-            <Box className="flex">
+            <Box className="input-container fixed bottom-0 right-0 flex  bg-white w-full">
                 <TextField
                     fullWidth
                     label="message"
                     name="message"
                     type="text"
-                    value={""}
-                    // onChange={handleInputChange}
+                    value={messageToBeSent}
+                    onChange={(e)=>setMessageToBeSent(e.target.value)}
                     variant="outlined"
                     margin="normal"
                     required
                     placeholder="Your Message"
                     className='fixed bottom-2'
                 />
-                <Button className='rounded-md bg-blue-300 text-white'>
-                    Send
+                <Button
+                 className='rounded-md bg-blue-300 text-white'
+                 disabled={messageToBeSent.trim().length === 0}
+                 onClick={sendMessage}
+                 >
+                    <img src={SendButtonImage} alt="send button" className='h-12 w-12'/>
                 </Button>
             </Box>
         </Container>
