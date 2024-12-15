@@ -18,18 +18,17 @@ export default function Message({ message, time, isSender }) {
           backgroundColor: isSender ? '#1976d2' : '#f5f5f5',
           color: isSender ? 'white' : 'black',
           wordBreak: 'break-word',
-          position: 'relative',
         }}
       >
         <Typography variant="body1">{message}</Typography>
         <Typography
           variant="caption"
           sx={{
-            position: 'absolute',
-            bottom: '-16px',
-            right: '10px',
+            display: 'block',
+            marginTop: '5px',
             color: isSender ? '#cfe2ff' : '#aaa',
             fontSize: '10px',
+            textAlign: 'right',
           }}
         >
           {time}

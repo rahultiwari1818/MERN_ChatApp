@@ -1,15 +1,18 @@
 import { Avatar, Box, ListItem, ListItemAvatar, ListItemText, Typography } from '@mui/material';
 import React from 'react';
-import {ReactComponent as ProfileIcon} from "../../Assets/SVGs/Profile.svg"
+import  ProfileIcon from "../../Assets/SVGs/Profile.svg"
 export default function User({ user,handleClick }) {
   return (
     <ListItem
-      key={user.id}
+      key={user._id}
       className='p-4 mb-1 cursor-pointer border-b-white border-b rounded-lg hover:bg-[#1976d2]'
-      onClick={handleClick}
+      onClick={()=>{
+        handleClick(user._id)
+      }}
+      
     >
       <ListItemAvatar>
-        <Avatar src={user.avatar === "" ? ProfileIcon : user.avatar} alt={user.name} />
+        <Avatar src={user.avatar === "" ? ProfileIcon : user.avatar} alt={user.name} className='rounded outline outline-white p-2'/>
       </ListItemAvatar>
       <ListItemText
         primary={

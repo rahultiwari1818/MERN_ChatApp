@@ -3,8 +3,11 @@ import React, { useState } from 'react'
 import Overlay from '../Common/Overlay';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import {useNavigate} from "react-router-dom";
 
 export default function Login() {
+    
+    const navigate = useNavigate(null);
 
     const [data, setData] = useState({
         email: "",
@@ -29,6 +32,7 @@ export default function Login() {
               });
               toast.success(response.data.message);
               localStorage.setItem("token",response.data.token);
+              navigate("/chat");
         } catch (error) {
             console.log(error);
             toast.error(error.response.data.message);

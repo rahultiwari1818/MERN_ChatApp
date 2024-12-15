@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Container,
   List,
   Typography,
 } from '@mui/material';
 import User from '../User/User';
+import axios from "axios";
+import { useNavigate } from 'react-router-dom';
 
-const users = [
+const user = [
     { id: 1, name: 'John Doe', avatar: '', lastMessage: 'Hey, how are you?', time: '09:30 AM' },
     { id: 2, name: 'Jane Smith', avatar: '', lastMessage: 'Meeting rescheduled.', time: '08:45 AM' },
     { id: 3, name: 'Emily Davis', avatar: '', lastMessage: 'Check the document.', time: 'Yesterday' },
@@ -30,16 +32,44 @@ const users = [
 ];
 
 export default function UserList({handleClick}) {
+
+  const [users,setUsers] = useState([]);
+  const navigate = useNavigate(null);
+
+  const getUsers = async() =>{
+      try {
+          const {data} = await axios.get(`${process.env.REACT_APP_API_URL}/api/v1/users/getAllUsers`,{
+            headers:{
+              Authorization:localStorage.getItem("token"),
+            }
+          });
+          setUsers(()=>data.data.length === 0 ? [] : data.data);
+      } catch (error) {
+          console.log(error?.response);
+          if(error?.response.status === 400) navigate("/");
+      }
+  }
+
+  useEffect(()=>{
+
+    getUsers();
+
+
+  },[]);
+
   return (
-    <Container maxWidth="sm" className='h-screen overflow-scroll fixed bg-blue-300 text-white z-10'>
-      <Typography variant="h6" sx={{ mt: 2, mb: 2 }}>
+    <section  className='h-screen px-10 overflow-scroll fixed bg-blue-300 text-white z-10 md:w-[30%]  '>
+      <Typography variant="h6" sx={{ mt: 2, mb: 2 }}
+        onClick={handleClick}
+      >
         Chats
       </Typography>
       <List>
-        {users.map((user) => (
-          <User user={user} handleClick={handleClick}/>
+        
+        {users?.map((user) => (
+          <User user={user} handleClick={handleClick} key={user._id} />
         ))}
       </List>
-    </Container>
+    </section>
   );
 }

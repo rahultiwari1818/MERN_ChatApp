@@ -1,29 +1,62 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { io } from 'socket.io-client';
 import UserList from '../Components/UserList/UserList';
 import ChatScreen from '../Components/ChatScreen/ChatScreen';
-import { Button } from '@mui/material';
+import { ReactComponent as BarIcon } from ".././Assets/SVGs/Bar.svg";
+import notificationSound from "../Assets/Sounds/notification.mp3";
+
+
 
 export default function MainApp() {
-  const socket = io(process.env.REACT_APP_API_URL, {
-    auth: {
-      userId: localStorage.getItem("token")
-    }
-  });
+
+  const [changeTextBoxCss,setChangeTextBoxCss] = useState();
+
 
   const [isVisibleUserList, setIsVisibleUserList] = useState(true);
-  const [showButtons, setShowButtons] = useState(false)
+  const [showButtons, setShowButtons] = useState(false);
+  const [recipient, setRecipient] = useState("");
+
+
+
+
   const handleResize = () => {
     let width = window.innerWidth;
     if (width < 1000) {
       setShowButtons(true);
       setIsVisibleUserList(false)
+      setChangeTextBoxCss(()=>"left-0");
     }
     else {
       setIsVisibleUserList(true);
       setShowButtons(false);
+      if(width > 1100){
+        setChangeTextBoxCss(()=>"left-[360px]");
+
+      }
+      else if(width > 1200){
+        setChangeTextBoxCss(()=>"left-[380px]");
+
+      }
+      else if(width > 1300){
+        setChangeTextBoxCss(()=>"left-[420px]");
+
+      }
+      else if(width > 1400){
+        setChangeTextBoxCss(()=>"left-[480px]");
+
+      }
+      else if(width > 1500){
+        setChangeTextBoxCss(()=>"left-[520px]");
+
+      }
+      else if(width > 1600){
+        setChangeTextBoxCss(()=>"left-[580px]");
+
+      }
+      else{
+        setChangeTextBoxCss(()=>"left-[620px]");
+      }
     }
-    // console.log(width);
   };
 
   useEffect(() => {
@@ -42,9 +75,20 @@ export default function MainApp() {
     setIsVisibleUserList(true);
   }
 
-  const handleHideClick = () => {
+  const handleHideClick = (newRecipient) => {
+
+    setRecipient(() => newRecipient);
+
+    if (window.innerWidth > 1000) return;
     setIsVisibleUserList(false);
   }
+
+  const socket = io(process.env.REACT_APP_API_URL, {
+    auth: {
+      userId: localStorage.getItem("token")
+    }
+  });
+
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -52,11 +96,17 @@ export default function MainApp() {
     })
 
 
+    socket?.on("newMessage", (newMessage) => {
+      const sound = new Audio(notificationSound);
+      sound.play();
+      console.log(newMessage)
+    });
+
 
     return () => {
       socket.disconnect();
     }
-  }, []);
+  });
 
   return (
     <>
@@ -65,17 +115,19 @@ export default function MainApp() {
         {
           showButtons
           &&
-          <Button className='bg-black text-white absolute left-0 z-10'
+          <button
+
+            className='bg-blue-300 px-3 py-3 rounded-tr-lg rounded-br-lg  absolute left-0 z-10 cursor-pointer'
             onClick={handleBarClick}
           >
-            Button
-          </Button>
+            <BarIcon className="h-6 w-6 md:h-10 md:w-10" />
+          </button>
         }
         {
           isVisibleUserList &&
           <UserList handleClick={handleHideClick} />
         }
-        <ChatScreen />
+        <ChatScreen recipient={recipient} changeTextBoxCss={changeTextBoxCss}/>
       </section>
     </>
   )
