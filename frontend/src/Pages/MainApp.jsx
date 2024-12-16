@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, {  useEffect, useState } from 'react'
 import { io } from 'socket.io-client';
 import UserList from '../Components/UserList/UserList';
 import ChatScreen from '../Components/ChatScreen/ChatScreen';
@@ -9,9 +9,9 @@ import notificationSound from "../Assets/Sounds/notification.mp3";
 
 export default function MainApp() {
 
-  const [changeTextBoxCss,setChangeTextBoxCss] = useState();
+  const [changeTextBoxCss, setChangeTextBoxCss] = useState();
 
-
+  const [newMessage,setNewMessage] = useState("");
   const [isVisibleUserList, setIsVisibleUserList] = useState(true);
   const [showButtons, setShowButtons] = useState(false);
   const [recipient, setRecipient] = useState("");
@@ -24,37 +24,28 @@ export default function MainApp() {
     if (width < 1000) {
       setShowButtons(true);
       setIsVisibleUserList(false)
-      setChangeTextBoxCss(()=>"left-0");
+      setChangeTextBoxCss(() => "left-0");
     }
     else {
       setIsVisibleUserList(true);
       setShowButtons(false);
-      if(width > 1100){
-        setChangeTextBoxCss(()=>"left-[360px]");
-
-      }
-      else if(width > 1200){
-        setChangeTextBoxCss(()=>"left-[380px]");
-
-      }
-      else if(width > 1300){
-        setChangeTextBoxCss(()=>"left-[420px]");
-
-      }
-      else if(width > 1400){
-        setChangeTextBoxCss(()=>"left-[480px]");
-
-      }
-      else if(width > 1500){
-        setChangeTextBoxCss(()=>"left-[520px]");
-
-      }
-      else if(width > 1600){
-        setChangeTextBoxCss(()=>"left-[580px]");
-
-      }
-      else{
-        setChangeTextBoxCss(()=>"left-[620px]");
+      
+      if (width > 1600) {
+        setChangeTextBoxCss(() => "left-[580px]");
+      } else if (width > 1500) {
+        setChangeTextBoxCss(() => "left-[520px]");
+      } else if (width > 1400) {
+        setChangeTextBoxCss(() => "left-[480px]");
+      } else if (width > 1300) {
+        setChangeTextBoxCss(() => "left-[420px]");
+      } else if (width > 1200) {
+        setChangeTextBoxCss(() => "left-[380px]");
+      } else if (width > 1100) {
+        setChangeTextBoxCss(() => "left-[360px]");
+      } else if (width > 1000) {
+        setChangeTextBoxCss(() => "left-[320px]");
+      } else {
+        setChangeTextBoxCss(() => "left-[620px]");
       }
     }
   };
@@ -94,12 +85,20 @@ export default function MainApp() {
     socket.on("connect", () => {
       console.log("connected");
     })
+    socket.on('connect_error', (err) => {
+      console.log("Connection Error: ", err);
+    });
+    socket.on('connect_failed', (err) => {
+      console.log("Connection Failed: ", err);
+    });
+    
 
 
-    socket?.on("newMessage", (newMessage) => {
+    socket?.on("newMessage", (newMessage) => { 
       const sound = new Audio(notificationSound);
       sound.play();
       console.log(newMessage)
+      setNewMessage(newMessage);
     });
 
 
@@ -127,7 +126,7 @@ export default function MainApp() {
           isVisibleUserList &&
           <UserList handleClick={handleHideClick} />
         }
-        <ChatScreen recipient={recipient} changeTextBoxCss={changeTextBoxCss}/>
+        <ChatScreen recipient={recipient} changeTextBoxCss={changeTextBoxCss} newMessage={newMessage}/>
       </section>
     </>
   )

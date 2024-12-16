@@ -1,5 +1,5 @@
 import Messages from "../models/messages.models.js";
-import { getReceiverSocketId } from "../socket/app.socket.js";
+import { getReceiverSocketId, io } from "../socket/app.socket.js";
 
 export const getMessages = async(req,res)=>{
     try {
@@ -11,6 +11,7 @@ export const getMessages = async(req,res)=>{
               { senderId: recipientId, recipientId: senderId } 
             ]
           }).sort({ timestamp: 1 });
+
 
           const formattedMessages = messages.map(message => ({
             ...message.toObject(), // Convert Mongoose document to plain JS object

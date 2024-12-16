@@ -1,10 +1,10 @@
-import { Box, Button, Container, TextField, Typography } from '@mui/material'
+import { Box, Button, TextField, Typography } from '@mui/material'
 import React, { useEffect, useRef, useState } from 'react'
 import Message from '../Message/Message';
 import SendButtonImage from "../../Assets/Images/SendButton.png";
 import axios from 'axios';
 
-export default function ChatScreen({ recipient,changeTextBoxCss }) {
+export default function ChatScreen({ recipient,changeTextBoxCss,newMessage }) {
     const [messageToBeSent, setMessageToBeSent] = useState("");
     const [messages, setMessages] = useState([]);
     const messageBoxRef = useRef(null);
@@ -27,6 +27,9 @@ export default function ChatScreen({ recipient,changeTextBoxCss }) {
             messageBoxRef.current.scrollTop = messageBoxRef.current.scrollHeight;
         }
     }
+    useEffect(()=>{
+        setMessages((old)=>[...old,newMessage]);
+    },[newMessage])
 
     useEffect(() => {
         getMessages();
@@ -43,7 +46,7 @@ export default function ChatScreen({ recipient,changeTextBoxCss }) {
                 message: messageToBeSent,
                 recipient: recipient,
             };
-            const { data } = await axios.post(
+             await axios.post(
                 `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`,
                 dataToBeSent,
                 {

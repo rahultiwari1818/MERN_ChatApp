@@ -1,6 +1,7 @@
 import express from "express";
 import {Server} from "socket.io";
 import {createServer} from "http";
+import jwt from "jsonwebtoken";
 
 const app = express();
 
@@ -14,21 +15,30 @@ const io = new Server(server,{
     }
 });
 
+const userSocketMap = {};
+const offlineMessages = [];
+
+
 export const getReceiverSocketId = (receiverId) => {
 	return userSocketMap[receiverId];
 };
 
+export const saveOfflineMessage = (message) =>{
+    offlineMessages.push(message);
+}
 
-const userSocketMap = {};
 
 
 io.on("connection",(socket)=>{
 
 
-    const userId = socket.handshake.query.userId;
-	if (userId != "undefined") userSocketMap[userId] = socket.id;
-
-
+    const userToken = socket.handshake.auth.userId;
+    let userId = "";
+	if(userToken != "undefined"){
+        const decoded = jwt.verify(userToken, process.env.SECRET_KEY); // Replace SECRET_KEY with your key
+        userId = decoded._id;
+        userSocketMap[userId] = socket.id; 
+    };
 
     socket.on("disconnect",()=>{
         delete userSocketMap[userId];
