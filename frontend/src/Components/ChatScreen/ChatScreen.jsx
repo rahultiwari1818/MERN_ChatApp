@@ -11,6 +11,7 @@ export default function ChatScreen({ recipient,changeTextBoxCss,newMessage }) {
 
     const getMessages = async () => {
         try {
+            if(!recipient) return;
             const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/v1/messages/getAllMessages/${recipient}`, {
                 headers: {
                     Authorization: localStorage.getItem("token"),

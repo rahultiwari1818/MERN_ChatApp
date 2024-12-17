@@ -3,11 +3,11 @@ import React, { useState } from 'react'
 import Overlay from '../Common/Overlay';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import {useNavigate} from "react-router-dom";
+import {useAuth} from "../../Contexts/AuthProvider";
 
 export default function Login() {
     
-    const navigate = useNavigate(null);
+    const {  login } = useAuth();
 
     const [data, setData] = useState({
         email: "",
@@ -31,11 +31,12 @@ export default function Login() {
                 password : data.password
               });
               toast.success(response.data.message);
-              localStorage.setItem("token",response.data.token);
-              navigate("/chat");
+              login(response.data.token,{email:data.email});
         } catch (error) {
             console.log(error);
-            toast.error(error.response.data.message);
+            if(error?.response?.data){
+                toast.error(error?.response?.data?.message);
+            }
         }
         finally{
             setShowOverlay(false)

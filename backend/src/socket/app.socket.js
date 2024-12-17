@@ -16,7 +16,7 @@ const io = new Server(server,{
 });
 
 const userSocketMap = {};
-const offlineMessages = [];
+const offlineMessages = new Set();
 
 
 export const getReceiverSocketId = (receiverId) => {
@@ -24,7 +24,7 @@ export const getReceiverSocketId = (receiverId) => {
 };
 
 export const saveOfflineMessage = (message) =>{
-    offlineMessages.push(message);
+    offlineMessages.add(message);
 }
 
 
@@ -39,7 +39,13 @@ io.on("connection",(socket)=>{
         userId = decoded._id;
         userSocketMap[userId] = socket.id; 
     };
-
+    const userMessages = new Set();
+    for(let message of offlineMessages){
+        if(message.recipientId === userId){
+            io.to(recipientId).emit("newMessage",message);
+            userMessages.add(message._id);
+        }
+    }
     socket.on("disconnect",()=>{
         delete userSocketMap[userId];
     })

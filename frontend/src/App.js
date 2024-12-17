@@ -1,19 +1,21 @@
 import React from 'react';
 import './App.css';
 import Navbar from './Components/Navbar/Navbar';
-import RegistrationPage from './Pages/RegistrationPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { BrowserRouter } from 'react-router-dom';
 import Router from './Router/Router';
+import AuthProvider from './Contexts/AuthProvider';
 
 function App() {
   return (
 
     <BrowserRouter>
-        <Navbar/>
-        <Router/>
-        <ToastContainer />
+      <AuthProvider>
+          <Navbar/>
+          <Router/>
+          <ToastContainer />
+      </AuthProvider>
     </BrowserRouter>
 
   );
