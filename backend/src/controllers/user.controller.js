@@ -1,6 +1,6 @@
 import { sendMail } from "../config/mail.config.js";
 import { client } from "../config/redis.config.js";
-import { generateHashPassword, generateOTP, generateToken, verifyPassword } from "../utils/utils.js";
+import { createHTMLBody, generateHashPassword, generateOTP, generateToken, verifyPassword } from "../utils/utils.js";
 import User from "../models/users.models.js";
 
 
@@ -141,12 +141,70 @@ export const getAllUsers = async(req,res)=>{
 export const getUserDetails = async(req,res)=>{
     try {
         const userId = req.user._id;
-        const users = await User.find({ _id: userId },{password:0});
+        const users = await User.findOne({ _id: userId },{password:0});
         return res.status(200).json({
             message:"User Profile Fetched Successfully.",
             data:users,
             result:true
         })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            error
+        })    
+    }
+}
+
+
+export const inviteFriend = async(req,res) =>{
+    try {
+
+        const userName = req.user.name;
+        const {friendMail} = req.body;
+
+        const mailBody = createHTMLBody(` <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2>Hi there!</h2>
+            <p>
+              Your friend <strong>${userName}</strong> has invited you to join <strong>Vartalaap Chat App</strong>, 
+              an amazing platform where you can connect, chat, and share moments with friends and family!
+            </p>
+            <p>
+              Experience seamless communication and enjoy features like real-time messaging, user-friendly design, and more.
+            </p>
+            <p>
+              Click the link below to join the fun and start chatting today:
+            </p>
+            <p>
+              <a href="https://www.vartalaap-chat-app.com/" 
+                 style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 5px;">
+                Join Vartalaap Now
+              </a>
+            </p>
+            <p>
+              See you on Vartalaap! 😊
+            </p>
+            <hr />
+            <p style="font-size: 0.9em; color: #555;">
+              If you have any questions or need assistance, feel free to reach out to us at 
+              <a href="mailto:support@vartalaap-chat-app.com">support@vartalaap-chat-app.com</a>.
+            </p>
+          </div>
+        `);
+        const resp = await sendMail(friendMail,"Invitation to Use Vartalaap Chat App.",mailBody);
+
+        if(resp.result){
+            return res.status(200).json({
+                message : "Invitation Sent Successfully.!",
+                result : true
+            })
+        }
+        else{
+            return res.status(500).json({
+                error:resp.message
+            }) 
+        }
+        
+        
     } catch (error) {
         console.log(error)
         return res.status(500).json({

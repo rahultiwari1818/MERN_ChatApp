@@ -11,7 +11,7 @@ function App() {
   return (
 
     <BrowserRouter>
-      <AuthProvider>
+      <AuthProvider >
           <Navbar/>
           <Router/>
           <ToastContainer />

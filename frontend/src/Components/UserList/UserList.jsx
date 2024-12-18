@@ -12,6 +12,7 @@ export default function UserList({handleClick}) {
 
   const [users,setUsers] = useState([]);
   const navigate = useNavigate(null);
+  
 
   const getUsers = async() =>{
       try {

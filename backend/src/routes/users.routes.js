@@ -1,5 +1,5 @@
 import express from "express";
-import { loginUser, registerUser, sendOTP, verifyOTP,getAllUsers,getUserDetails } from "../controllers/user.controller.js";
+import { loginUser, registerUser, sendOTP, verifyOTP,getAllUsers,getUserDetails, inviteFriend } from "../controllers/user.controller.js";
 import { verifyUser } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -11,5 +11,7 @@ router.post("/login",loginUser);
 
 router.get("/getAllUsers",verifyUser,getAllUsers);
 router.get("/profile",verifyUser,getUserDetails);
+
+router.post("/inviteFriend",verifyUser,inviteFriend);
 
 export default router;
