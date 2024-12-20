@@ -7,7 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "frontend":"cd frontend && npm start ",
     "backend":"cd backend && npm start",
-    "start":"npm run frontend & npm run backend"
+    "start":"npm run frontend & npm run backend",
+    "install-and-build-prod-client": "cd frontend && npm install && npm run build",
+    "start-prod-client":"cd frontend && npm install -g serve && cd build && serve -s ",
+    "start-prod-server":"cd backend && npm install && npm run prod-start"
   },
   "author": "",
   "license": "ISC"
