@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Typography, TextField, Button, } from '@mui/material';
+import { Avatar, Typography, TextField, } from '@mui/material';
 import axios from 'axios';
 import ProfileIcon from "../../Assets/SVGs/Profile.svg";
 import {ReactComponent as CameraIcon} from "../../Assets/SVGs/CameraIcon.svg";
+import {toast} from "react-toastify";
+
 export default function Profile() {
   const [userData, setUserData] = useState({});
-  const [editable, setEditable] = useState(false);
+  // const [editable, setEditable] = useState(false);
   const [updatedData, setUpdatedData] = useState({ name: '', email: '' });
+  const [friendEmail,setFriendEmail] = useState("");
 
   const fetchProfileData = async () => {
     try {
@@ -22,28 +25,46 @@ export default function Profile() {
     }
   };
 
-  const handleEditToggle = () => {
-    setEditable((prev) => !prev);
-  };
+  // const handleEditToggle = () => {
+  //   setEditable((prev) => !prev);
+  // };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUpdatedData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveChanges = async () => {
+  const inviteFriendHandler = async ( ) =>{
     try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/api/v1/users/profile`, updatedData, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
-      });
-      setUserData(updatedData);
-      setEditable(false);
-    } catch (err) {
-      // setError('Failed to update profile');
+
+      const {data} = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/inviteFriend`,{friendMail:friendEmail},{
+        headers:{
+          Authorization:localStorage.getItem("token")
+        }
+      })
+
+      toast.success(data.message);
+      setFriendEmail("");
+      
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.error?.message)
     }
-  };
+  }
+
+  // const handleSaveChanges = async () => {
+  //   try {
+  //     await axios.put(`${process.env.REACT_APP_API_URL}/api/v1/users/profile`, updatedData, {
+  //       headers: {
+  //         Authorization: localStorage.getItem("token"),
+  //       },
+  //     });
+  //     setUserData(updatedData);
+  //     setEditable(false);
+  //   } catch (err) {
+  //     // setError('Failed to update profile');
+  //   }
+  // };
 
   useEffect(() => {
     fetchProfileData();
@@ -104,6 +125,28 @@ export default function Profile() {
             Save Changes
           </Button>
         )} */}
+        <section className='lg:flex justify-between items-center p-4 my-4 outline outline-blue-300 rounded-lg gap-5'>
+          <Typography variant="h4" color="initial">
+            Invite a Friend to Chat
+          </Typography>
+          <TextField
+          fullWidth
+          name="email"
+          label="Email"
+          type="email"
+          variant="outlined"
+          margin="normal"
+          value={friendEmail}
+          onChange={(e)=>setFriendEmail(e.target.value)}
+        />
+        <button
+        className='bg-blue-400 text-white rounded-lg px-4 py-3 hover:text-blue-400 hover:bg-white hover:outline hover:outline-blue-400'
+        onClick={inviteFriendHandler}
+        >
+          Invite
+        </button>
+
+        </section>
       </section>
     </section>
   );
