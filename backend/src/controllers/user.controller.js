@@ -212,3 +212,32 @@ export const inviteFriend = async(req,res) =>{
         })    
     }
 }
+
+export const searchUser = async(req,res)=>{
+    try {
+
+        const {friendMail} = req.query;
+
+        const data = await User.find(
+            {
+                $or: [
+                    { email: { $regex: friendMail?.trim(), $options: 'i' } }, // Case-insensitive match for email
+                    { name: { $regex: friendMail?.trim(), $options: 'i' } }  // Case-insensitive match for name
+                ]
+            },
+            { password: 0 } // Exclude the password field from the result
+        );
+
+        return res.status(200).json({
+            message:"Users Fetched Successfully.!",
+            data,
+            result:true
+        })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            error
+        })    
+    }
+}
