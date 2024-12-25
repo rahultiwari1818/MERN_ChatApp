@@ -8,11 +8,14 @@ import User from '../User/User';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../Utils/utils';
+import { useChat } from '../../Contexts/ChatProvider';
 
 export default function UserList({ handleClick,newMessage,recipient }) {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const [searchEmail, setSearchEmail] = useState('');
+
+  const {changeRecipient} = useChat();
 
   const getUsers = async (email) => {
     try {
@@ -76,7 +79,10 @@ export default function UserList({ handleClick,newMessage,recipient }) {
       <Typography
         variant="h6"
         sx={{ mt: 2, mb: 2 }}
-        onClick={() => handleClick(undefined)}
+        onClick={() => {
+          handleClick()
+          changeRecipient("");
+        }}
       >
         Chats
       </Typography>

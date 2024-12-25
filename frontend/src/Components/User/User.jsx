@@ -1,13 +1,17 @@
 import { Avatar, Box, ListItem, ListItemAvatar, ListItemText, Typography } from '@mui/material';
 import React from 'react';
 import  ProfileIcon from "../../Assets/SVGs/Profile.svg"
+import { useChat } from '../../Contexts/ChatProvider';
 export default function User({ user,handleClick }) {
+    const {changeRecipient} = useChat();
+  
   return (
     <ListItem
       key={user._id}
       className='p-4 mb-1 cursor-pointer border-b-white border-b rounded-lg hover:bg-[#1976d2]'
       onClick={()=>{
-        handleClick(user._id)
+        handleClick()
+        changeRecipient(user);
       }}
       
     >

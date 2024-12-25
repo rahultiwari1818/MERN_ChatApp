@@ -3,16 +3,18 @@ import React, { useEffect, useRef, useState } from 'react'
 import Message from '../Message/Message';
 import SendButtonImage from "../../Assets/Images/SendButton.png";
 import axios from 'axios';
+import { useChat } from '../../Contexts/ChatProvider';
 
-export default function ChatScreen({ recipient,changeTextBoxCss,newMessage }) {
+export default function ChatScreen({ changeTextBoxCss }) {
     const [messageToBeSent, setMessageToBeSent] = useState("");
     const [messages, setMessages] = useState([]);
     const messageBoxRef = useRef(null);
+    const { newMessage, recipient } = useChat();
 
     const getMessages = async () => {
         try {
-            if(!recipient) return;
-            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/v1/messages/getAllMessages/${recipient}`, {
+            if (!recipient) return;
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/v1/messages/getAllMessages/${recipient?._id}`, {
                 headers: {
                     Authorization: localStorage.getItem("token"),
                 }
@@ -28,9 +30,9 @@ export default function ChatScreen({ recipient,changeTextBoxCss,newMessage }) {
             messageBoxRef.current.scrollTop = messageBoxRef.current.scrollHeight;
         }
     }
-    useEffect(()=>{
-        setMessages((old)=>[...old,newMessage]);
-    },[newMessage])
+    useEffect(() => {
+        setMessages((old) => [...old, newMessage]);
+    }, [newMessage])
 
     useEffect(() => {
         getMessages();
@@ -45,9 +47,9 @@ export default function ChatScreen({ recipient,changeTextBoxCss,newMessage }) {
         try {
             const dataToBeSent = {
                 message: messageToBeSent,
-                recipient: recipient,
+                recipient: recipient._id,
             };
-             await axios.post(
+            await axios.post(
                 `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`,
                 dataToBeSent,
                 {
@@ -65,6 +67,17 @@ export default function ChatScreen({ recipient,changeTextBoxCss,newMessage }) {
 
     return (
         <section className={`h-[80vh] fixed right-0 bottom-5 top-[85px]  overflow-hidden ${changeTextBoxCss}`}>
+            {
+                recipient
+                &&
+                <section className='w-full px-3 py-3 flex justify-end border-b-2 '>
+                    <Typography variant="h4" color="initial">
+                        {
+                            recipient.name
+                        }
+                    </Typography>
+                </section>
+            }
             <Box
                 className="mb-10 overflow-y-scroll h-full"
                 ref={messageBoxRef} // Place the ref here on the scrollable section

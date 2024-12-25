@@ -39,9 +39,10 @@ export default function ChatProvider({ children }) {
         socket?.on("newMessage", (newMessage) => {
             const sound = new Audio(notificationSound);
             sound?.play();
-            console.log(newMessage, recipient)
-            if (recipient === newMessage.senderId) {
+            // console.log(newMessage, recipient,"message")
+            if (recipient._id === newMessage.senderId) {
                 setNewMessage(newMessage);
+
             }
 
         });
@@ -50,12 +51,12 @@ export default function ChatProvider({ children }) {
         return () => {
             socket.disconnect();
         }
-    });
+    },[]);
 
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, logout }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient }}>
             {children}
         </ChatContext.Provider>
     );
