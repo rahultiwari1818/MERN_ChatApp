@@ -34,7 +34,7 @@ export default function User({ user,handleClick }) {
               }}
               className=''
             >
-              {user.lastMessage}
+              {user?.lastMessage}
             </Typography>
             <Typography
               variant="caption"

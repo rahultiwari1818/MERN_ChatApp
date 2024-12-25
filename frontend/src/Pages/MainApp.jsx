@@ -96,9 +96,12 @@ export default function MainApp() {
 
     socket?.on("newMessage", (newMessage) => { 
       const sound = new Audio(notificationSound);
-      sound.play();
-      console.log(newMessage)
-      setNewMessage(newMessage);
+      sound?.play();
+      console.log(newMessage,recipient)
+      if(recipient === newMessage.senderId){
+        setNewMessage(newMessage);
+      }
+
     });
 
 
@@ -124,7 +127,7 @@ export default function MainApp() {
         }
         {
           isVisibleUserList &&
-          <UserList handleClick={handleHideClick} />
+          <UserList handleClick={handleHideClick} recipient={recipient}  newMessage={newMessage} />
         }
         <ChatScreen recipient={recipient} changeTextBoxCss={changeTextBoxCss} newMessage={newMessage}/>
       </section>

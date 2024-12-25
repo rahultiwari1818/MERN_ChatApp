@@ -2,6 +2,7 @@ import { sendMail } from "../config/mail.config.js";
 import { client } from "../config/redis.config.js";
 import { createHTMLBody, generateHashPassword, generateOTP, generateToken, verifyPassword } from "../utils/utils.js";
 import User from "../models/users.models.js";
+import Messages from "../models/messages.models.js";
 
 
 export const registerUser = async(req,res) =>{
@@ -120,23 +121,79 @@ export const verifyOTP = async(req,res) =>{
     }
 }
 
-export const getAllUsers = async(req,res)=>{
+export const getUsers = async (req, res) => {
     try {
-        const userId = req.user._id;
-        const users = await User.find({ _id: { $ne: userId } },{password:0});
+        const { friendMail } = req.query;
+        const userId = req.user._id; // Current logged-in user
+
+        // Base query to exclude the current user
+        let query = { _id: { $ne: userId } };
+
+        // If friendMail is provided, search by email or name
+        if (friendMail?.trim()) {
+            query.$or = [
+                { email: { $regex: friendMail.trim(), $options: 'i' } },
+                { name: { $regex: friendMail.trim(), $options: 'i' } }
+            ];
+        }
+
+        // Fetch users excluding the password field
+        const users = await User.find(query, { password: 0 });
+        const userIds = users.map(user => user._id); // Extract user IDs
+
+        // Fetch latest messages involving the current user
+        const messages = await Messages.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { sender: { $in: userIds }, receiver: userId },
+                        { sender: userId, receiver: { $in: userIds } }
+                    ]
+                }
+            },
+            { $sort: { createdAt: -1 } }, // Sort by newest message first
+            {
+                $group: {
+                    _id: { $cond: [{ $eq: ["$sender", userId] }, "$receiver", "$sender"] },
+                    lastMessage: { $first: "$content" },
+                    lastMessageTime: { $first: "$createdAt" }
+                }
+            }
+        ]);
+
+        // Map users to their last message
+        const userData = users.map(user => {
+            const messageData = messages.find(m => m._id.toString() === user._id.toString());
+            return {
+                ...user.toObject(),
+                lastMessage: messageData?.lastMessage || null,
+                lastMessageTime: messageData?.lastMessageTime || null
+            };
+        });
+
+        // Sort by lastMessageTime (most recent first), fall back to no messages
+        userData.sort((a, b) => {
+            if (b.lastMessageTime && a.lastMessageTime) {
+                return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
+            }
+            if (b.lastMessageTime) return 1;
+            if (a.lastMessageTime) return -1;
+            return 0;
+        });
+
         return res.status(200).json({
-            message:"Users Fetched Successfully.",
-            data:users,
-            result:true
-        })
-    
+            message: "Users Fetched Successfully.",
+            data: userData,
+            result: true
+        });
+
     } catch (error) {
-        console.log(error)
-        return res.status(500).json({
-            error
-        })    
+        console.error("Error in getUsers:", error);
+        return res.status(500).json({ error });
     }
-}
+};
+
+
 
 export const getUserDetails = async(req,res)=>{
     try {
@@ -213,31 +270,3 @@ export const inviteFriend = async(req,res) =>{
     }
 }
 
-export const searchUser = async(req,res)=>{
-    try {
-
-        const {friendMail} = req.query;
-
-        const data = await User.find(
-            {
-                $or: [
-                    { email: { $regex: friendMail?.trim(), $options: 'i' } }, // Case-insensitive match for email
-                    { name: { $regex: friendMail?.trim(), $options: 'i' } }  // Case-insensitive match for name
-                ]
-            },
-            { password: 0 } // Exclude the password field from the result
-        );
-
-        return res.status(200).json({
-            message:"Users Fetched Successfully.!",
-            data,
-            result:true
-        })
-
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({
-            error
-        })    
-    }
-}
