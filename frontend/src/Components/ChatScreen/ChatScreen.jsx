@@ -66,20 +66,28 @@ export default function ChatScreen({ changeTextBoxCss }) {
     };
 
     return (
-        <section className={`h-[80vh] fixed right-0 bottom-5 top-[85px]  overflow-hidden ${changeTextBoxCss}`}>
+        <section className={`h-[84vh] fixed right-0 bottom-5 top-[85px]  overflow-hidden ${changeTextBoxCss}`}>
             {
                 recipient
                 &&
-                <section className='w-full px-3 py-3 flex justify-end border-b-2 '>
-                    <Typography variant="h4" color="initial">
-                        {
-                            recipient.name
-                        }
-                    </Typography>
+                <section className='w-full px-3 py-1 flex justify-end border-b-2 border-blue-500'>
+                    <section>
+
+                        <Typography variant="h6" color="initial">
+                            {
+                                recipient.name
+                            }
+                        </Typography>
+                        <Typography variant="p" color="blue">
+                          Last Seen at  {
+                                recipient?.lastSeen
+                            }
+                        </Typography>
+                    </section>
                 </section>
             }
             <Box
-                className="mb-10 overflow-y-scroll h-full"
+                className={`mb-3 overflow-y-scroll ${recipient ? "h-[90%]" :"h-full"} `}
                 ref={messageBoxRef} // Place the ref here on the scrollable section
             >
                 {recipient ? (

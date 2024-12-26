@@ -20,6 +20,10 @@ const userSchema = new Schema({
         unique:true,
         trim:true
     },
+    lastSeen:{
+        type:Date,
+        default: Date.now
+    },
     createdAt: {
         type: Date,
         default: Date.now
