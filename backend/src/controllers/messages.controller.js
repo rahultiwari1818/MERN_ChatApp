@@ -1,6 +1,6 @@
 import Conversation from "../models/conversation.model.js";
 import Messages from "../models/messages.models.js";
-import { getReceiverSocketId, io } from "../socket/app.socket.js";
+import { getReceiverSocketId, io, saveOfflineMessage } from "../socket/app.socket.js";
 
 export const getMessages = async(req,res)=>{
     try {
@@ -76,6 +76,9 @@ export const sendMessage = async(req,res) =>{
 		if (receiverSocketId) {
 			io.to(receiverSocketId).emit("newMessage", newMessage);
 		}
+        else{
+            saveOfflineMessage(newMessage);
+        }
 
 
         return res.status(201).json({

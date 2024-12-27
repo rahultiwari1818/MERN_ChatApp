@@ -4,6 +4,11 @@ import notificationSound from "../Assets/Sounds/notification.mp3";
 
 // Create Chat Context
 const ChatContext = createContext();
+const socket = io(process.env.REACT_APP_API_URL, {
+    auth: {
+        userId: localStorage.getItem("token")
+    }
+});
 
 // ChatProvider Component
 export default function ChatProvider({ children }) {
@@ -12,18 +17,23 @@ export default function ChatProvider({ children }) {
 
 
     const changeRecipient = async (recipient) => {
-        setRecipient(recipient);
+        // console.log("recipient selected :",recipient);
+        setRecipient(()=>recipient);
     };
     
 
-    const socket = io(process.env.REACT_APP_API_URL, {
-        auth: {
-            userId: localStorage.getItem("token")
-        }
-    });
+    const newMessageHandler = async(newMessage)=>{
+        const sound = new Audio(notificationSound);
+        sound?.play();
+        // console.log(newMessage, recipient,"message")
+        if (recipient._id === newMessage.senderId) {
+            setNewMessage(newMessage);
 
+        }
+    }
 
     useEffect(() => {
+
         socket.on("connect", () => {
             console.log("connected");
         })
@@ -36,22 +46,13 @@ export default function ChatProvider({ children }) {
 
 
 
-        socket?.on("newMessage", (newMessage) => {
-            const sound = new Audio(notificationSound);
-            sound?.play();
-            // console.log(newMessage, recipient,"message")
-            if (recipient._id === newMessage.senderId) {
-                setNewMessage(newMessage);
-
-            }
-
-        });
+        socket?.on("newMessage", newMessageHandler);
 
 
         return () => {
-            socket.disconnect();
-        }
-    },[]);
+                socket.off('newMessage');
+        };        
+    },[recipient]);
 
 
 

@@ -4,6 +4,7 @@ import Message from '../Message/Message';
 import SendButtonImage from "../../Assets/Images/SendButton.png";
 import axios from 'axios';
 import { useChat } from '../../Contexts/ChatProvider';
+import { formatDate } from '../../Utils/utils';
 
 export default function ChatScreen({ changeTextBoxCss }) {
     const [messageToBeSent, setMessageToBeSent] = useState("");
@@ -78,11 +79,19 @@ export default function ChatScreen({ changeTextBoxCss }) {
                                 recipient.name
                             }
                         </Typography>
-                        <Typography variant="p" color="blue">
-                          Last Seen at  {
-                                recipient?.lastSeen
-                            }
-                        </Typography>
+                        {
+                            recipient?.isOnline ?
+                            <Typography variant="p" color="green">
+                                Online
+                            </Typography>
+                            :
+                            recipient?.lastSeen &&
+                            <Typography variant="p" color="blue">
+                            Last Seen at  {
+                                    formatDate(recipient?.lastSeen)
+                                }
+                            </Typography>
+                        }
                     </section>
                 </section>
             }

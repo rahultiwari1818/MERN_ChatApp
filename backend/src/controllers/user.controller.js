@@ -3,25 +3,28 @@ import { client } from "../config/redis.config.js";
 import { createHTMLBody, generateHashPassword, generateOTP, generateToken, verifyPassword } from "../utils/utils.js";
 import User from "../models/users.models.js";
 import Messages from "../models/messages.models.js";
+import { isUserOnline } from "../socket/app.socket.js";
+import fs from "fs/promises";
+import ft from 'fs'
 
 
-export const registerUser = async(req,res) =>{
+export const registerUser = async (req, res) => {
     try {
 
-        const {mail , password , name} = req.body;
-        if([password , name,mail].some(val => val === "" || val === undefined) )  return res.status(400).json({message:"Please Provide All The Required Fields.!",result:false});
+        const { mail, password, name } = req.body;
+        if ([password, name, mail].some(val => val === "" || val === undefined)) return res.status(400).json({ message: "Please Provide All The Required Fields.!", result: false });
         const hashedPasswd = await generateHashPassword(password);
         await User.create({
-            email : mail,
+            email: mail,
             name,
-            password:hashedPasswd
+            password: hashedPasswd
         })
 
         return res.status(201).json({
             message: "User Registered Successfully!",
-            result:true
+            result: true
         })
-        
+
     } catch (error) {
         console.log(error);
         return res.status(500).json({
@@ -30,29 +33,29 @@ export const registerUser = async(req,res) =>{
     }
 }
 
-export const loginUser = async(req,res,next) => {
+export const loginUser = async (req, res, next) => {
     try {
 
-        const {mail,password} = req.body;
-        if([password,mail].some(val => val ==="" || val === undefined))  return res.status(400).json({message:"Please provide Email and Password!",result:false});
-        const user = await User.findOne({email:mail});
-        if(!user){
+        const { mail, password } = req.body;
+        if ([password, mail].some(val => val === "" || val === undefined)) return res.status(400).json({ message: "Please provide Email and Password!", result: false });
+        const user = await User.findOne({ email: mail });
+        if (!user) {
             return res.status(400).json({
-                message : "Incorrect Email.!",
-                result : false
+                message: "Incorrect Email.!",
+                result: false
             })
         }
 
-        if(!await verifyPassword(password,user.password)) return res.status(401).json({message:"Incorrect Password",result:false});
-        const token = generateToken({_id:user._id,name:user.name,email:user.email});
+        if (!await verifyPassword(password, user.password)) return res.status(401).json({ message: "Incorrect Password", result: false });
+        const token = generateToken({ _id: user._id, name: user.name, email: user.email });
         return res.status(200).json({
-            message:"User Loggedin Successfully.!",
-            result:true,
+            message: "User Loggedin Successfully.!",
+            result: true,
             token
         })
 
 
-        
+
     } catch (error) {
         return res.status(500).json({
             error
@@ -60,64 +63,64 @@ export const loginUser = async(req,res,next) => {
     }
 }
 
-export const sendOTP = async(req,res)=>{
+export const sendOTP = async (req, res) => {
 
     try {
 
         const mail = req.body?.email;
-        if(!mail) return res.status(400).json({message:"Please provide Email.!",result:false});
+        if (!mail) return res.status(400).json({ message: "Please provide Email.!", result: false });
         const otp = generateOTP();
-        await client.set(mail,otp);
-        
-        const resp = await sendMail(mail,"Verification OTP",`Your OTP is ${otp}`);
-        if(resp.result){
+        await client.set(mail, otp);
+
+        const resp = await sendMail(mail, "Verification OTP", `Your OTP is ${otp}`);
+        if (resp.result) {
             return res.status(200).json({
-                message : "OTP Sent Successfully.!",
-                result : true
+                message: "OTP Sent Successfully.!",
+                result: true
             })
         }
-        else{
+        else {
             return res.status(500).json({
-                error:resp.message
-            }) 
+                error: resp.message
+            })
         }
-        
+
     } catch (error) {
         console.log(error)
         return res.status(500).json({
             error
-        }) 
+        })
     }
 
 }
 
-export const verifyOTP = async(req,res) =>{
+export const verifyOTP = async (req, res) => {
     try {
-        const {mail,otp} = req.body;
+        const { mail, otp } = req.body;
         if ([otp, mail].some(value => value === "" || value === undefined)) {
             return res.status(400).json({ message: "Please provide Email and OTP!", result: false });
-          }
+        }
         const storedOTP = await client.get(mail);
-        if(storedOTP === otp ){
+        if (storedOTP === otp) {
             await client.del(mail);
-            const token =  generateToken({email:mail});
+            const token = generateToken({ email: mail });
             return res.status(200).json({
-                message:"User Verified Succcessfully",
+                message: "User Verified Succcessfully",
                 token,
-                result:true
+                result: true
             })
         }
-        else{
-           return res.status(401).json({
-                message:"Invaalid OTP",
-                result:false
-           })
+        else {
+            return res.status(401).json({
+                message: "Invaalid OTP",
+                result: false
+            })
         }
     } catch (error) {
         console.log(error)
         return res.status(500).json({
             error
-        })    
+        })
     }
 }
 
@@ -164,10 +167,12 @@ export const getUsers = async (req, res) => {
         // Map users to their last message
         const userData = users.map(user => {
             const messageData = messages.find(m => m._id.toString() === user._id.toString());
+            let isOnline = isUserOnline(user._id);
             return {
                 ...user.toObject(),
                 lastMessage: messageData?.lastMessage || null,
-                lastMessageTime: messageData?.lastMessageTime || null
+                lastMessageTime: messageData?.lastMessageTime || null,
+                isOnline
             };
         });
 
@@ -195,29 +200,29 @@ export const getUsers = async (req, res) => {
 
 
 
-export const getUserDetails = async(req,res)=>{
+export const getUserDetails = async (req, res) => {
     try {
         const userId = req.user._id;
-        const users = await User.findOne({ _id: userId },{password:0});
+        const users = await User.findOne({ _id: userId }, { password: 0 });
         return res.status(200).json({
-            message:"User Profile Fetched Successfully.",
-            data:users,
-            result:true
+            message: "User Profile Fetched Successfully.",
+            data: users,
+            result: true
         })
     } catch (error) {
         console.log(error)
         return res.status(500).json({
             error
-        })    
+        })
     }
 }
 
 
-export const inviteFriend = async(req,res) =>{
+export const inviteFriend = async (req, res) => {
     try {
 
         const userName = req.user.name;
-        const {friendMail} = req.body;
+        const { friendMail } = req.body;
 
         const mailBody = createHTMLBody(` <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
             <h2>Hi there!</h2>
@@ -247,26 +252,58 @@ export const inviteFriend = async(req,res) =>{
             </p>
           </div>
         `);
-        const resp = await sendMail(friendMail,"Invitation to Use Vartalaap Chat App.",mailBody);
+        const resp = await sendMail(friendMail, "Invitation to Use Vartalaap Chat App.", mailBody);
 
-        if(resp.result){
+        if (resp.result) {
             return res.status(200).json({
-                message : "Invitation Sent Successfully.!",
-                result : true
+                message: "Invitation Sent Successfully.!",
+                result: true
             })
         }
-        else{
+        else {
             return res.status(500).json({
-                error:resp.message
-            }) 
+                error: resp.message
+            })
         }
-        
-        
+
+
     } catch (error) {
         console.log(error)
         return res.status(500).json({
             error
-        })    
+        })
     }
 }
 
+export const changeProfilePic = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const photo = req.file;
+        if (!photo) return res.status(400).json({ message: "File Not Found" });
+        const photoName = photo.originalname;
+       
+         await User.findOneAndUpdate(
+            { _id: userId },
+            {
+                $set: {
+                    profilePic:photoName
+                }
+            },
+            { new: true }
+        );
+
+        return res.status(200).json({
+            message: "Profile Photo Uploaded Sucessfully",
+            result: true,
+            data: {profilePic:photoName}
+        })
+
+
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            error
+        })
+    }
+}

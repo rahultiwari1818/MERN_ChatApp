@@ -28,27 +28,33 @@ export const saveOfflineMessage = (message) =>{
     offlineMessages.add(message);
 }
 
+export const isUserOnline = (userId) =>{
+    return userSocketMap[userId] ? true : false;
+}
 
 
 io.on("connection",(socket)=>{
 
-
     const userToken = socket.handshake?.auth?.userId;
     let _id = "";
     try {
-        if(userToken != "undefined"){
+        if(userToken){
             const decoded = jwt.verify(userToken, process.env.SECRET_KEY); // Replace SECRET_KEY with your key
             _id = decoded._id;
             userSocketMap[_id] = socket.id; 
+            console.log("User Connected :",_id);
         };
-        const userMessages = new Set();
-        for(let message of offlineMessages){
-            if(message.recipientId === _id){
-                io.to(recipientId).emit("newMessage",message);
-                userMessages.add(message._id);
+
+        offlineMessages.forEach((message) => {
+            if (message.recipientId === _id) {
+                io.to(socket.id).emit("newMessage", message);
+                offlineMessages.delete(message); // Remove after sending
             }
-        }
+        });
+
         socket.on("disconnect",async()=>{
+            console.log("User Disconnected : ",_id);
+            if(!_id) return;
             await User.findByIdAndUpdate(_id, { lastSeen: Date.now() });
             delete userSocketMap[_id];
     
