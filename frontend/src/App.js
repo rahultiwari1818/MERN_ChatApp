@@ -6,15 +6,18 @@ import 'react-toastify/dist/ReactToastify.css';
 import { BrowserRouter } from 'react-router-dom';
 import Router from './Router/Router';
 import AuthProvider from './Contexts/AuthProvider';
+import OverlayProvider from './Contexts/OverlayProvider';
 
 function App() {
   return (
 
     <BrowserRouter>
       <AuthProvider >
-          <Navbar/>
-          <Router/>
-          <ToastContainer />
+        <OverlayProvider>
+            <Navbar/>
+            <Router/>
+            <ToastContainer />
+        </OverlayProvider>
       </AuthProvider>
     </BrowserRouter>
 

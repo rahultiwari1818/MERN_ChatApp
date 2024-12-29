@@ -6,6 +6,7 @@ import Messages from "../models/messages.models.js";
 import { isUserOnline } from "../socket/app.socket.js";
 import fs from "fs/promises";
 import ft from 'fs'
+import { uploadToCloudinary } from "../config/cloudinary.config.js";
 
 
 export const registerUser = async (req, res) => {
@@ -280,13 +281,19 @@ export const changeProfilePic = async (req, res) => {
         const userId = req.user._id;
         const photo = req.file;
         if (!photo) return res.status(400).json({ message: "File Not Found" });
-        const photoName = photo.originalname;
-       
+        const result = await uploadToCloudinary(photo.path, "image");
+        if (result.message === "Fail") {
+            return res.status(500).json({
+                message: "Some Error Occued...",
+                result: false
+            })
+        }
+        const newProfilePicPath = result.url;
          await User.findOneAndUpdate(
             { _id: userId },
             {
                 $set: {
-                    profilePic:photoName
+                    profilePic:newProfilePicPath
                 }
             },
             { new: true }
@@ -295,7 +302,7 @@ export const changeProfilePic = async (req, res) => {
         return res.status(200).json({
             message: "Profile Photo Uploaded Sucessfully",
             result: true,
-            data: {profilePic:photoName}
+            data: {profilePic:newProfilePicPath}
         })
 
 
