@@ -72,19 +72,7 @@ export default function Profile() {
     setOpenUpdateProfileDialog(true);
   }
 
-  // const handleSaveChanges = async () => {
-  //   try {
-  //     await axios.put(`${process.env.REACT_APP_API_URL}/api/v1/users/profile`, updatedData, {
-  //       headers: {
-  //         Authorization: localStorage.getItem("token"),
-  //       },
-  //     });
-  //     setUserData(updatedData);
-  //     setEditable(false);
-  //   } catch (err) {
-  //     // setError('Failed to update profile');
-  //   }
-  // };
+
 
   useEffect(() => {
     fetchProfileData();
@@ -98,8 +86,7 @@ export default function Profile() {
           <Avatar
             src={userData.profilePic ? userData?.profilePic : ProfileIcon}
             alt="User Image"
-            sx={{ width: 120, height: 120 }}
-            className='outline outline-blue-300 p-3'
+            sx={{ width: 150, height: 150 }}
           />
           <button className='absolute bottom-0  right-2 outline bg-white p-2    rounded-xl'
             onClick={handleProfileClick}

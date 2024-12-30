@@ -93,3 +93,39 @@ export const sendMessage = async(req,res) =>{
         })    
     }
 }
+
+export const deleteMessage = async(req,res)=>{
+    try {
+
+        const { messageId } = req.params; // Assuming the message ID is passed as a route parameter
+
+        if (!messageId) {
+            return res.status(400).json({
+                message: "Message ID is required",
+                result: false,
+            });
+        }
+
+        // Find and delete the message
+        const deletedMessage = await Messages.findByIdAndDelete(messageId);
+
+        if (!deletedMessage) {
+            return res.status(404).json({
+                message: "Message not found",
+                result: false,
+            });
+        }
+
+        return res.status(200).json({
+            message: "Message Deleted Successfully",
+            result: true,
+            data: deletedMessage, // Optionally return the deleted message
+        });
+        
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            error
+        })    
+    }
+}

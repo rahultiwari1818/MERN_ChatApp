@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Typography, Avatar } from "@mui/material";
 import DialogComp from "../Common/Dialog";
-import CameraIcon from "../../Assets/SVGs/CameraIcon.svg"; // Update path as per your file structure
+import ProfileIcon from "../../Assets/SVGs/Profile.svg"; // Update path as per your file structure
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useOverlay } from "../../Contexts/OverlayProvider";
@@ -61,7 +61,7 @@ export default function ProfileDialog({ open, handleClose, data, handleNewProfil
             <DialogComp open={open} handleClose={handleClose} dialogTitle="Update Profile Photo">
                 <div className="flex flex-col items-center gap-4">
                     <Avatar
-                        src={preview || (data?.profilePic || CameraIcon)}
+                        src={preview || (data?.profilePic || ProfileIcon)}
                         alt="Preview"
                         sx={{ width: 120, height: 120 }}
                     />

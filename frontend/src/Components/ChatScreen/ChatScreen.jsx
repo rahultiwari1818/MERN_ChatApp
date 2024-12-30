@@ -1,10 +1,12 @@
-import { Box, Button, TextField, Typography } from '@mui/material'
-import React, { useEffect, useRef, useState } from 'react'
+import { Avatar, Box, Button, TextField, Typography } from '@mui/material'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Message from '../Message/Message';
 import SendButtonImage from "../../Assets/Images/SendButton.png";
 import axios from 'axios';
 import { useChat } from '../../Contexts/ChatProvider';
 import { formatDate } from '../../Utils/utils';
+import ProfileIcon from "../../Assets/SVGs/Profile.svg";
+
 
 export default function ChatScreen({ changeTextBoxCss }) {
     const [messageToBeSent, setMessageToBeSent] = useState("");
@@ -66,12 +68,28 @@ export default function ChatScreen({ changeTextBoxCss }) {
         }
     };
 
+    const onDeletingMessage = useCallback((messageId)=>{
+        setMessages((old)=>{
+            return old.filter((oldMessage)=>oldMessage._id !== messageId);
+        })
+    },[]);
+
     return (
         <section className={`h-[84vh] fixed right-0 bottom-5 top-[85px]  overflow-hidden ${changeTextBoxCss}`}>
             {
                 recipient
                 &&
-                <section className='w-full px-3 py-1 flex justify-end border-b-2 border-blue-500'>
+                <section className='w-full px-3 py-1 flex justify-between border-b-2 border-blue-500'>
+                    <section className='px-3'>
+                        <Avatar
+                            src={(recipient?.profilePic || ProfileIcon)}
+                            alt="Preview"
+                            sx={{
+                                width: 50, height: 50, outline: "2px solid #3b82f6",
+                                outlineOffset: "2px",
+                            }}
+                        />
+                    </section>
                     <section>
 
                         <Typography variant="h6" color="initial">
@@ -81,22 +99,22 @@ export default function ChatScreen({ changeTextBoxCss }) {
                         </Typography>
                         {
                             recipient?.isOnline ?
-                            <Typography variant="p" color="green">
-                                Online
-                            </Typography>
-                            :
-                            recipient?.lastSeen &&
-                            <Typography variant="p" color="blue">
-                            Last Seen at  {
-                                    formatDate(recipient?.lastSeen)
-                                }
-                            </Typography>
+                                <Typography variant="p" color="green">
+                                    Online
+                                </Typography>
+                                :
+                                recipient?.lastSeen &&
+                                <Typography variant="p" color="blue">
+                                    Last Seen at  {
+                                        formatDate(recipient?.lastSeen)
+                                    }
+                                </Typography>
                         }
                     </section>
                 </section>
             }
             <Box
-                className={`mb-3 overflow-y-scroll ${recipient ? "h-[90%]" :"h-full"} `}
+                className={`mb-3 overflow-y-scroll ${recipient ? "h-[90%]" : "h-full"} `}
                 ref={messageBoxRef} // Place the ref here on the scrollable section
             >
                 {recipient ? (
@@ -115,6 +133,8 @@ export default function ChatScreen({ changeTextBoxCss }) {
                                     time={message.timestamp}
                                     isSender={message.isSender}
                                     key={message._id || message.timestamp}
+                                    messageId={message._id}
+                                    onDeletingMessage = {onDeletingMessage}
                                 />
                             ))
                         )}
