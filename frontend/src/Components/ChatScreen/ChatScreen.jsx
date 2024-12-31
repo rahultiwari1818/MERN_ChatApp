@@ -1,11 +1,10 @@
-import { Avatar, Box, Button, TextField, Typography } from '@mui/material'
+import { Box, Button, TextField, Typography } from '@mui/material'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Message from '../Message/Message';
 import SendButtonImage from "../../Assets/Images/SendButton.png";
 import axios from 'axios';
 import { useChat } from '../../Contexts/ChatProvider';
-import { formatDate } from '../../Utils/utils';
-import ProfileIcon from "../../Assets/SVGs/Profile.svg";
+import RecipientInfo from '../RecipientInfo/RecipientInfo';
 
 
 export default function ChatScreen({ changeTextBoxCss }) {
@@ -68,50 +67,18 @@ export default function ChatScreen({ changeTextBoxCss }) {
         }
     };
 
-    const onDeletingMessage = useCallback((messageId)=>{
-        setMessages((old)=>{
-            return old.filter((oldMessage)=>oldMessage._id !== messageId);
+    const onDeletingMessage = useCallback((messageId) => {
+        setMessages((old) => {
+            return old.filter((oldMessage) => oldMessage._id !== messageId);
         })
-    },[]);
+    }, []);
 
     return (
         <section className={`h-[84vh] fixed right-0 bottom-5 top-[85px]  overflow-hidden ${changeTextBoxCss}`}>
             {
                 recipient
                 &&
-                <section className='w-full px-3 py-1 flex justify-between border-b-2 border-blue-500'>
-                    <section className='px-3'>
-                        <Avatar
-                            src={(recipient?.profilePic || ProfileIcon)}
-                            alt="Preview"
-                            sx={{
-                                width: 50, height: 50, outline: "2px solid #3b82f6",
-                                outlineOffset: "2px",
-                            }}
-                        />
-                    </section>
-                    <section>
-
-                        <Typography variant="h6" color="initial">
-                            {
-                                recipient.name
-                            }
-                        </Typography>
-                        {
-                            recipient?.isOnline ?
-                                <Typography variant="p" color="green">
-                                    Online
-                                </Typography>
-                                :
-                                recipient?.lastSeen &&
-                                <Typography variant="p" color="blue">
-                                    Last Seen at  {
-                                        formatDate(recipient?.lastSeen)
-                                    }
-                                </Typography>
-                        }
-                    </section>
-                </section>
+                <RecipientInfo />
             }
             <Box
                 className={`mb-3 overflow-y-scroll ${recipient ? "h-[90%]" : "h-full"} `}
@@ -134,7 +101,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                                     isSender={message.isSender}
                                     key={message._id || message.timestamp}
                                     messageId={message._id}
-                                    onDeletingMessage = {onDeletingMessage}
+                                    onDeletingMessage={onDeletingMessage}
                                 />
                             ))
                         )}
@@ -148,28 +115,45 @@ export default function ChatScreen({ changeTextBoxCss }) {
                     </Typography>
                 )}
             </Box>
-            <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white  ${changeTextBoxCss}`}>
-                <TextField
-                    fullWidth
-                    label="message"
-                    name="message"
-                    type="text"
-                    value={messageToBeSent}
-                    onChange={(e) => setMessageToBeSent(e.target.value)}
-                    variant="outlined"
-                    margin="normal"
-                    required
-                    placeholder="Your Message"
-                    className="fixed bottom-2"
-                />
-                <Button
-                    className="rounded-md bg-blue-300 text-white"
-                    disabled={messageToBeSent.trim().length === 0 || !recipient}
-                    onClick={sendMessage}
-                >
-                    <img src={SendButtonImage} alt="send button" className="h-12 w-12" />
-                </Button>
-            </section>
+            {
+                recipient?.hasBlocked ?
+                    <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2  ${changeTextBoxCss} `}>
+                        <Typography variant="h5" color="initial">
+                            You Are Blocked By {recipient.name}
+                        </Typography>
+                    </section>
+                    :
+                    recipient?.isBlocked 
+                    ?
+                    <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2  ${changeTextBoxCss} `}>
+                    <Typography variant="h5" color="initial">
+                        {recipient.name} is Blocked By You. Unblock {recipient.name} to Start Chat.
+                    </Typography>
+                </section>
+                    :
+                    <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white  ${changeTextBoxCss}`}>
+                        <TextField
+                            fullWidth
+                            label="message"
+                            name="message"
+                            type="text"
+                            value={messageToBeSent}
+                            onChange={(e) => setMessageToBeSent(e.target.value)}
+                            variant="outlined"
+                            margin="normal"
+                            required
+                            placeholder="Your Message"
+                            className="fixed bottom-2"
+                        />
+                        <Button
+                            className="rounded-md bg-blue-300 text-white"
+                            disabled={messageToBeSent.trim().length === 0 || !recipient}
+                            onClick={sendMessage}
+                        >
+                            <img src={SendButtonImage} alt="send button" className="h-12 w-12" />
+                        </Button>
+                    </section>
+            }
         </section>
     );
 }

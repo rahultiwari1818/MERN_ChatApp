@@ -38,7 +38,7 @@ export default function Message({ message, time, isSender, messageId, onDeleting
         error.response?.data?.message || "An error occurred while deleting the message."
       );
     }
-    finally{
+    finally {
       closeDialog();
     }
   }, []);
@@ -94,8 +94,10 @@ export default function Message({ message, time, isSender, messageId, onDeleting
         }}
         className='cursor-pointer'
         onClick={() => {
+          if(!isSender) return;
           setOpenDeleteDialog(true);
         }}
+
       >
         <Box
           sx={{
@@ -122,7 +124,7 @@ export default function Message({ message, time, isSender, messageId, onDeleting
           </Typography>
         </Box>
       </Container>
-      <DeletionDialogBox open={openDeleteDialog} handleClose={closeDialog} deleteHandler={deleteHandler}/>
+      <DeletionDialogBox open={openDeleteDialog} handleClose={closeDialog} deleteHandler={deleteHandler} />
     </>
   );
 }
@@ -131,7 +133,7 @@ export default function Message({ message, time, isSender, messageId, onDeleting
 // --------------------------------------- Dialog Box For Deleting ----------------------------------------
 
 
-function DeletionDialogBox({ open, handleClose,deleteHandler }) {
+function DeletionDialogBox({ open, handleClose, deleteHandler }) {
   return (
     <DialogComp open={open} handleClose={handleClose} dialogTitle="Delete This Message">
       <Typography variant="h6" className='text-red-500'>
@@ -139,7 +141,26 @@ function DeletionDialogBox({ open, handleClose,deleteHandler }) {
         Are you Sure ?
       </Typography>
       <DialogActions>
-        <Button onClick={deleteHandler}>Delete</Button>
+        <Button
+          onClick={deleteHandler}
+          sx={{
+            backgroundColor: 'red',
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 'bold',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            border: '2px solid transparent',
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': {
+                backgroundColor: 'white',
+                color: 'red',
+                border: '2px solid red',
+            },
+          }}
+        >
+          Delete
+        </Button>
       </DialogActions>
     </DialogComp>
   )

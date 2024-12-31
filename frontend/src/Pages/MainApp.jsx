@@ -1,9 +1,7 @@
 import React, {  useCallback, useEffect, useState } from 'react'
-// import { io } from 'socket.io-client';
 import UserList from '../Components/UserList/UserList';
 import ChatScreen from '../Components/ChatScreen/ChatScreen';
 import { ReactComponent as BarIcon } from ".././Assets/SVGs/Bar.svg";
-// import notificationSound from "../Assets/Sounds/notification.mp3";
 import ChatProvider from '../Contexts/ChatProvider';
 
 
@@ -81,7 +79,7 @@ export default function MainApp() {
           &&
           <button
 
-            className='bg-blue-300 px-3 py-3 rounded-tr-lg rounded-br-lg  absolute left-0 z-10 cursor-pointer'
+            className='bg-blue-300 px-3 py-3 rounded-tr-lg rounded-br-lg top-6  absolute left-0 z-10 cursor-pointer'
             onClick={handleBarClick}
           >
             <BarIcon className="h-6 w-6 md:h-10 md:w-10" />

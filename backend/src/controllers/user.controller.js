@@ -4,8 +4,6 @@ import { createHTMLBody, generateHashPassword, generateOTP, generateToken, verif
 import User from "../models/users.models.js";
 import Messages from "../models/messages.models.js";
 import { isUserOnline } from "../socket/app.socket.js";
-import fs from "fs/promises";
-import ft from 'fs'
 import { uploadToCloudinary } from "../config/cloudinary.config.js";
 
 
@@ -52,7 +50,10 @@ export const loginUser = async (req, res, next) => {
         return res.status(200).json({
             message: "User Loggedin Successfully.!",
             result: true,
-            token
+            token,
+            data:{
+                blockedUsers:user.blockedUsers
+            }
         })
 
 
@@ -166,14 +167,21 @@ export const getUsers = async (req, res) => {
         ]);
 
         // Map users to their last message
+        const userDetails = await User.findById({_id:userId});
         const userData = users.map(user => {
             const messageData = messages.find(m => m._id.toString() === user._id.toString());
             let isOnline = isUserOnline(user._id);
+            // console.log(user.blockedUsers)
+            const hasBlocked = user.blockedUsers.findIndex((id)=>id.toString() === req.user._id) >= 0? true : false;
+            const isBlocked = userDetails.blockedUsers.findIndex((id)=>id.toString() === user._id.toString()) >= 0 ? true : false;
+            
             return {
                 ...user.toObject(),
                 lastMessage: messageData?.lastMessage || null,
                 lastMessageTime: messageData?.lastMessageTime || null,
-                isOnline
+                isOnline,
+                hasBlocked,
+                isBlocked
             };
         });
 
@@ -314,3 +322,41 @@ export const changeProfilePic = async (req, res) => {
         })
     }
 }
+
+export const blockUser = async (req, res) => {
+    try {
+      const { userIdToBlock } = req.params;
+      const _id = req.user._id; // Assume user ID is extracted from the token
+  
+      if (_id === userIdToBlock) {
+        return res.status(400).json({ message: "You cannot block yourself." });
+      }
+  
+      await User.findByIdAndUpdate(_id, {
+        $push:{blockedUsers:userIdToBlock}
+      });
+  
+      return res.status(200).json({ message: "User blocked successfully.",result:true });
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      return res.status(500).json({ message: "An error occurred.", error });
+    }
+  };
+
+  export const unblockUser = async (req, res) => {
+    try {
+      const { userIdToUnblock } = req.params;
+      const userId = req.user._id;
+  
+      await User.findByIdAndUpdate({_id:userId}, {
+        $pull: { blockedUsers: userIdToUnblock }
+      });
+  
+      return res.status(200).json({ message: "User unblocked successfully." ,result:true});
+    } catch (error) {
+      console.error("Error unblocking user:", error);
+      return res.status(500).json({ message: "An error occurred.", error });
+    }
+  };
+  
+  

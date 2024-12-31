@@ -31,7 +31,9 @@ const userSchema = new Schema({
       updatedAt: {
         type: Date,
         default: Date.now
-      }
+      },
+      blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+
 });
 
 const User = mongoose.model("User",userSchema)
