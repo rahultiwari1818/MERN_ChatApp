@@ -12,7 +12,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
     const [messages, setMessages] = useState([]);
     const messageBoxRef = useRef(null);
     const { newMessage, recipient } = useChat();
-    
+
     const getMessages = async () => {
         try {
             if (!recipient) return;
@@ -60,7 +60,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                     },
                 }
             );
-            setMessages((old) => [...old, { message: messageToBeSent, timestamp:new Date().toISOString(), isSender: true }]);
+            setMessages((old) => [...old, { message: messageToBeSent, timestamp: new Date().toISOString(), isSender: true }]);
             setMessageToBeSent("");
         } catch (error) {
             console.log(error);
@@ -124,36 +124,33 @@ export default function ChatScreen({ changeTextBoxCss }) {
                         </Typography>
                     </section>
                     :
-                    recipient?.isBlocked 
-                    ?
-                    <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2  ${changeTextBoxCss} `}>
-                    <Typography variant="h5" color="initial">
-                        {recipient.name} is Blocked By You. Unblock {recipient.name} to Start Chat.
-                    </Typography>
-                </section>
-                    :
-                    <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white  ${changeTextBoxCss}`}>
-                        <TextField
-                            fullWidth
-                            label="message"
-                            name="message"
-                            type="text"
-                            value={messageToBeSent}
-                            onChange={(e) => setMessageToBeSent(e.target.value)}
-                            variant="outlined"
-                            margin="normal"
-                            required
-                            placeholder="Your Message"
-                            className="fixed bottom-2 text-wrap"
-                        />
-                        <Button
-                            className="rounded-md bg-blue-300 text-white"
-                            disabled={messageToBeSent.trim().length === 0 || !recipient}
-                            onClick={sendMessage}
-                        >
-                            <img src={SendButtonImage} alt="send button" className="h-12 w-12" />
-                        </Button>
-                    </section>
+                    recipient?.isBlocked
+                        ?
+                        <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2  ${changeTextBoxCss} `}>
+                            <Typography variant="h5" color="initial">
+                                {recipient.name} is Blocked By You. Unblock {recipient.name} to Start Chat.
+                            </Typography>
+                        </section>
+                        :
+                        <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white  ${changeTextBoxCss}`}>
+                            <textarea
+                                rows={1}
+                                value={messageToBeSent}
+                                onChange={(e) => setMessageToBeSent(e.target.value)}
+                                placeholder="Your Message"
+                                className="flex-1 resize-none overflow-auto p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                style={{
+                                    maxHeight: '150px', // Limit height if the text grows too much
+                                }}
+                            />
+                            <Button
+                                className="rounded-md bg-blue-300 text-white"
+                                disabled={messageToBeSent.trim().length === 0 || !recipient}
+                                onClick={sendMessage}
+                            >
+                                <img src={SendButtonImage} alt="send button" className="h-12 w-12" />
+                            </Button>
+                        </section>
             }
         </section>
     );

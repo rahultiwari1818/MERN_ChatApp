@@ -3,6 +3,7 @@ import { Container, Typography, Box, DialogActions, Button } from '@mui/material
 import { toast } from "react-toastify";
 import DialogComp from '../Common/Dialog';
 import axios from 'axios';
+import { formatDate } from '../../Utils/utils';
 
 export default function Message({ message, time, isSender, messageId, onDeletingMessage }) {
 
@@ -93,10 +94,7 @@ export default function Message({ message, time, isSender, messageId, onDeleting
           padding: '8px 0',
         }}
         className='cursor-pointer'
-        onClick={() => {
-          if(!isSender) return;
-          setOpenDeleteDialog(true);
-        }}
+        
 
       >
         <Box
@@ -107,6 +105,10 @@ export default function Message({ message, time, isSender, messageId, onDeleting
             backgroundColor: isSender ? '#1976d2' : '#f5f5f5',
             color: isSender ? 'white' : 'black',
             wordBreak: 'break-word',
+          }}
+          onClick={() => {
+            if(!isSender) return;
+            setOpenDeleteDialog(true);
           }}
         >
           <Typography  className='text-wrap text-xs md:text-sm lg:text-base'>{message}</Typography>
@@ -120,7 +122,7 @@ export default function Message({ message, time, isSender, messageId, onDeleting
               textAlign: 'right',
             }}
           >
-            {time}
+            {formatDate(time)}
           </Typography>
         </Box>
       </Container>

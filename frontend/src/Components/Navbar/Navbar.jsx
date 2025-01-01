@@ -1,5 +1,5 @@
 import React from 'react'
-import { ReactComponent as Logo } from '../../Assets/SVGs/logo.svg';
+import { ReactComponent as Logo } from '../../Assets/SVGs/logo1.svg';
 import {ReactComponent as ProfileIcon} from "../../Assets/SVGs/Profile.svg";
 import Menu from '../Menu/Menu.jsx';
 import { useAuth } from '../../Contexts/AuthProvider.jsx';
@@ -11,7 +11,7 @@ export default function Navbar() {
     <nav className='bg-white shadow-md pl-12  md:gap-5  flex justify-between items-center px-2 md:px-20 py-1 lg:py-3 w-screen '>
       
         <Logo
-        className="cursor-pointer"
+        className="cursor-pointer w-20 h-20"
          onClick={()=>{
           navigate("/");
         }}
