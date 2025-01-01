@@ -8,7 +8,7 @@ export default function Navbar() {
   const {  isAuthenticated } = useAuth();
   const navigate = useNavigate();
   return (
-    <nav className='bg-white shadow-md pl-12  md:gap-5  flex justify-between items-center px-2 md:px-20 py-3 w-screen '>
+    <nav className='bg-white shadow-md pl-12  md:gap-5  flex justify-between items-center px-2 md:px-20 py-1 lg:py-3 w-screen '>
       
         <Logo
         className="cursor-pointer"

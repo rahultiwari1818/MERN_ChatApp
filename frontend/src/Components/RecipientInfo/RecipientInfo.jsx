@@ -9,7 +9,7 @@ import { toast } from 'react-toastify';
 
 export default function RecipientInfo() {
 
-    const { recipient } = useChat();
+    const { recipient,changeBlockingStatus } = useChat();
     const [openUserDialog, setOpenUserDialog] = useState(false);
 
     const closeUserDialog = useCallback(() => {
@@ -30,12 +30,16 @@ export default function RecipientInfo() {
             );
             if (response.data.result) {
                 toast.success("User blocked successfully.");
+                changeBlockingStatus(true);
             } else {
                 toast.error("Failed to block the user.");
             }
         } catch (error) {
             console.error("Error while blocking user:", error);
             toast.error(error?.response?.data?.message || "An error occurred while blocking the user.");
+        }
+        finally{
+            closeUserDialog();
         }
     }, []);
     
@@ -52,12 +56,16 @@ export default function RecipientInfo() {
             );
             if (response.data.result) {
                 toast.success("User unblocked successfully.");
+                changeBlockingStatus(false);
             } else {
                 toast.error("Failed to unblock the user.");
             }
         } catch (error) {
             console.error("Error while unblocking user:", error);
             toast.error(error?.response?.data?.message || "An error occurred while unblocking the user.");
+        }
+        finally{
+            closeUserDialog();
         }
     }, []);
     

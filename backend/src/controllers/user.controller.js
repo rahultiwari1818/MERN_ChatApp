@@ -246,7 +246,7 @@ export const inviteFriend = async (req, res) => {
               Click the link below to join the fun and start chatting today:
             </p>
             <p>
-              <a href="https://www.vartalaap-chat-app.com/" 
+              <a href="https://vartalaap-h5xh.onrender.com/" 
                  style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 5px;">
                 Join Vartalaap Now
               </a>

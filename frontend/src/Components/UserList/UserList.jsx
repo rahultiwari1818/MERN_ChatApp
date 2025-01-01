@@ -10,12 +10,12 @@ import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../Utils/utils';
 import { useChat } from '../../Contexts/ChatProvider';
 
-export default function UserList({ handleClick,newMessage,recipient }) {
+export default function UserList({ handleClick }) {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const [searchEmail, setSearchEmail] = useState('');
 
-  const {changeRecipient} = useChat();
+  const {changeRecipient,newMessage,recipient} = useChat();
 
   const getUsers = async (email) => {
     try {
@@ -62,17 +62,18 @@ export default function UserList({ handleClick,newMessage,recipient }) {
       );
   
       // If the user exists in the list and the chat is not open
-      if (userIndex !== -1 && recipient !== newMessage.senderId) {
+      if (userIndex !== -1 && recipient._id !== newMessage.senderId) {
         // Remove the user from its current position
-        const [user] = updatedUserList.splice(userIndex, 1);
+        const user = updatedUserList.splice(userIndex, 1);
         // Add the user to the top of the list
         updatedUserList.unshift(user);
       }
+      console.log(updatedUserList);
       return updatedUserList;
     }
     return users;
-  }, [newMessage, users, recipient]); // Include `users` and `recipient` in dependencies
-  
+  }, [newMessage, users]); // Include `users` and `recipient` in dependencies
+
 
   return (
     <section className="h-screen px-10 overflow-scroll fixed bg-blue-300 text-white z-10 md:w-[30%]">

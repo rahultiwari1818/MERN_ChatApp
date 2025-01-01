@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import notificationSound from "../Assets/Sounds/notification.mp3";
+import { toast } from 'react-toastify';
 
 // Create Chat Context
 const ChatContext = createContext();
@@ -21,14 +22,25 @@ export default function ChatProvider({ children }) {
         setRecipient(()=>recipient);
     };
     
+    const changeBlockingStatus = async(status)=>{
+        setRecipient((old)=>{
+            return {
+                ...old,
+                isBlocked : status
+            }
+        })
+    }
 
     const newMessageHandler = async(newMessage)=>{
         const sound = new Audio(notificationSound);
         sound?.play();
-        // console.log(newMessage, recipient,"message")
+        console.log(newMessage, recipient,"message")
         if (recipient._id === newMessage.senderId) {
             setNewMessage(newMessage);
-
+            
+        }
+        else{
+            toast.info("New Message");
         }
     }
 
@@ -57,7 +69,7 @@ export default function ChatProvider({ children }) {
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient,changeBlockingStatus }}>
             {children}
         </ChatContext.Provider>
     );

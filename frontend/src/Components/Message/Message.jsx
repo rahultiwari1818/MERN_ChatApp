@@ -109,7 +109,7 @@ export default function Message({ message, time, isSender, messageId, onDeleting
             wordBreak: 'break-word',
           }}
         >
-          <Typography variant="body1">{message}</Typography>
+          <Typography  className='text-wrap text-xs md:text-sm lg:text-base'>{message}</Typography>
           <Typography
             variant="caption"
             sx={{

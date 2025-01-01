@@ -12,7 +12,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
     const [messages, setMessages] = useState([]);
     const messageBoxRef = useRef(null);
     const { newMessage, recipient } = useChat();
-
+    
     const getMessages = async () => {
         try {
             if (!recipient) return;
@@ -60,7 +60,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                     },
                 }
             );
-            setMessages((old) => [...old, { message: messageToBeSent, timestamp: Date.now(), isSender: true }]);
+            setMessages((old) => [...old, { message: messageToBeSent, timestamp:new Date().toISOString(), isSender: true }]);
             setMessageToBeSent("");
         } catch (error) {
             console.log(error);
@@ -73,8 +73,9 @@ export default function ChatScreen({ changeTextBoxCss }) {
         })
     }, []);
 
+
     return (
-        <section className={`h-[84vh] fixed right-0 bottom-5 top-[85px]  overflow-hidden ${changeTextBoxCss}`}>
+        <section className={`h-[84vh] fixed right-0 bottom-5 top-[66px] lg:top-[85px]  overflow-hidden ${changeTextBoxCss}`}>
             {
                 recipient
                 &&
@@ -143,7 +144,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                             margin="normal"
                             required
                             placeholder="Your Message"
-                            className="fixed bottom-2"
+                            className="fixed bottom-2 text-wrap"
                         />
                         <Button
                             className="rounded-md bg-blue-300 text-white"

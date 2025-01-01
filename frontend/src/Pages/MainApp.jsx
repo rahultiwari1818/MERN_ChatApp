@@ -82,7 +82,7 @@ export default function MainApp() {
             className='bg-blue-300 px-3 py-3 rounded-tr-lg rounded-br-lg top-6  absolute left-0 z-10 cursor-pointer'
             onClick={handleBarClick}
           >
-            <BarIcon className="h-6 w-6 md:h-10 md:w-10" />
+            <BarIcon className=" h-4 w-4 lg:h-10 lg:w-10 md:h-6 md:w-6" />
           </button>
         }
         {
