@@ -47,7 +47,6 @@ export default function MenuBasic({Title}) {
           }}
         >
           <MenuItem onClick={openProfile}>Profile</MenuItem>
-          <MenuItem onClick={handleClose}>My account</MenuItem>
           <MenuItem onClick={logoutUser}>Logout</MenuItem>
         </Menu>
       </div>

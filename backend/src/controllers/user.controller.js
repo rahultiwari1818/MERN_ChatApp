@@ -51,8 +51,8 @@ export const loginUser = async (req, res, next) => {
             message: "User Loggedin Successfully.!",
             result: true,
             token,
-            data:{
-                blockedUsers:user.blockedUsers
+            data: {
+                blockedUsers: user.blockedUsers
             }
         })
 
@@ -167,14 +167,14 @@ export const getUsers = async (req, res) => {
         ]);
 
         // Map users to their last message
-        const userDetails = await User.findById({_id:userId});
+        const userDetails = await User.findById({ _id: userId });
         const userData = users.map(user => {
             const messageData = messages.find(m => m._id.toString() === user._id.toString());
             let isOnline = isUserOnline(user._id);
             // console.log(user.blockedUsers)
-            const hasBlocked = user.blockedUsers.findIndex((id)=>id.toString() === req.user._id) >= 0? true : false;
-            const isBlocked = userDetails.blockedUsers.findIndex((id)=>id.toString() === user._id.toString()) >= 0 ? true : false;
-            
+            const hasBlocked = user.blockedUsers.findIndex((id) => id.toString() === req.user._id) >= 0 ? true : false;
+            const isBlocked = userDetails.blockedUsers.findIndex((id) => id.toString() === user._id.toString()) >= 0 ? true : false;
+
             return {
                 ...user.toObject(),
                 lastMessage: messageData?.lastMessage || null,
@@ -212,7 +212,11 @@ export const getUsers = async (req, res) => {
 export const getUserDetails = async (req, res) => {
     try {
         const userId = req.user._id;
-        const users = await User.findOne({ _id: userId }, { password: 0 });
+        const users = await User.findOne({ _id: userId }, { password: 0 })
+            .populate({
+                path: 'blockedUsers',
+                select: '-password', // Exclude the password field
+            });
         return res.status(200).json({
             message: "User Profile Fetched Successfully.",
             data: users,
@@ -297,11 +301,11 @@ export const changeProfilePic = async (req, res) => {
             })
         }
         const newProfilePicPath = result.url;
-         await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             { _id: userId },
             {
                 $set: {
-                    profilePic:newProfilePicPath
+                    profilePic: newProfilePicPath
                 }
             },
             { new: true }
@@ -310,7 +314,7 @@ export const changeProfilePic = async (req, res) => {
         return res.status(200).json({
             message: "Profile Photo Uploaded Sucessfully",
             result: true,
-            data: {profilePic:newProfilePicPath}
+            data: { profilePic: newProfilePicPath }
         })
 
 
@@ -325,38 +329,37 @@ export const changeProfilePic = async (req, res) => {
 
 export const blockUser = async (req, res) => {
     try {
-      const { userIdToBlock } = req.params;
-      const _id = req.user._id; // Assume user ID is extracted from the token
-  
-      if (_id === userIdToBlock) {
-        return res.status(400).json({ message: "You cannot block yourself." });
-      }
-  
-      await User.findByIdAndUpdate(_id, {
-        $push:{blockedUsers:userIdToBlock}
-      });
-  
-      return res.status(200).json({ message: "User blocked successfully.",result:true });
-    } catch (error) {
-      console.error("Error blocking user:", error);
-      return res.status(500).json({ message: "An error occurred.", error });
-    }
-  };
+        const { userIdToBlock } = req.params;
+        const _id = req.user._id; // Assume user ID is extracted from the token
 
-  export const unblockUser = async (req, res) => {
-    try {
-      const { userIdToUnblock } = req.params;
-      const userId = req.user._id;
-  
-      await User.findByIdAndUpdate({_id:userId}, {
-        $pull: { blockedUsers: userIdToUnblock }
-      });
-  
-      return res.status(200).json({ message: "User unblocked successfully." ,result:true});
+        if (_id === userIdToBlock) {
+            return res.status(400).json({ message: "You cannot block yourself." });
+        }
+
+        await User.findByIdAndUpdate(_id, {
+            $push: { blockedUsers: userIdToBlock }
+        });
+
+        return res.status(200).json({ message: "User blocked successfully.", result: true });
     } catch (error) {
-      console.error("Error unblocking user:", error);
-      return res.status(500).json({ message: "An error occurred.", error });
+        console.error("Error blocking user:", error);
+        return res.status(500).json({ message: "An error occurred.", error });
     }
-  };
-  
-  
+};
+
+export const unblockUser = async (req, res) => {
+    try {
+        const { userIdToUnblock } = req.params;
+        const userId = req.user._id;
+
+        await User.findByIdAndUpdate({ _id: userId }, {
+            $pull: { blockedUsers: userIdToUnblock }
+        });
+
+        return res.status(200).json({ message: "User unblocked successfully.", result: true });
+    } catch (error) {
+        console.error("Error unblocking user:", error);
+        return res.status(500).json({ message: "An error occurred.", error });
+    }
+};
+

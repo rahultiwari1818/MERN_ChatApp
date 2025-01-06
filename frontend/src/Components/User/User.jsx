@@ -15,7 +15,7 @@ export default function User({ user,handleClick }) {
       
     >
       <ListItemAvatar>
-        <Avatar src={user?.profilePic  ? user?.profilePic: ProfileIcon} alt={user.name} className={`${!user?.profilePic ?  'rounded outline outline-white p-2 bg-white' : '' } `}     sx={!user?.profilePic ? { width: 40, height: 40 } : undefined} 
+        <Avatar src={user?.profilePic  ? user?.profilePic: ProfileIcon} alt={user.name} className={`${!user?.profilePic ?  'rounded outline outline-white p-2 bg-white' : '' } `}     sx={!user?.profilePic ? { width: 40, height: 40 } : {backgroundColor:"#ffffff"}} 
       />
       </ListItemAvatar>
       <ListItemText

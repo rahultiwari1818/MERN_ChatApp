@@ -73,7 +73,7 @@ export default function RecipientInfo() {
 
     return (
         <>
-            <section className='w-full px-3 py-1 flex justify-between border-b-2 border-blue-500 cursor-pointer'
+            <section className='w-full px-3 py-1 flex justify-between border-b-2 border-blue-500 cursor-pointer bg-blue-300'
                 title={`Click Here to get More Info About ${recipient.name}`}
                 onClick={() => {
                     setOpenUserDialog(true);
@@ -84,14 +84,14 @@ export default function RecipientInfo() {
                         src={(recipient?.profilePic || ProfileIcon)}
                         alt="Preview"
                         sx={{
-                            width: 50, height: 50, outline: "2px solid #3b82f6",
-                            outlineOffset: "2px",
+                            width: 50, height: 50, outline: "2px solid #ffffff",
+                            outlineOffset: "2px",background:"#ffffff"
                         }}
                     />
                 </section>
                 <section>
 
-                    <Typography variant="h6" color="initial">
+                    <Typography variant="h6" color="#ffffff" >
                         {
                             recipient.name
                         }

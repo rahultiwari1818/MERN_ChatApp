@@ -2,16 +2,16 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Avatar, Typography, TextField, } from '@mui/material';
 import axios from 'axios';
 import ProfileIcon from "../../Assets/SVGs/Profile.svg";
-import {ReactComponent as CameraIcon} from "../../Assets/SVGs/CameraIcon.svg";
-import {toast} from "react-toastify";
+import { ReactComponent as CameraIcon } from "../../Assets/SVGs/CameraIcon.svg";
+import { toast } from "react-toastify";
 import ProfileDialog from '../ProfileDialog/ProfileDialog';
 
 export default function Profile() {
   const [userData, setUserData] = useState({});
   // const [editable, setEditable] = useState(false);
   const [updatedData, setUpdatedData] = useState({ name: '', email: '' });
-  const [friendEmail,setFriendEmail] = useState("");
-  const [openUpdateProfileDialog,setOpenUpdateProfileDialog] = useState(false);
+  const [friendEmail, setFriendEmail] = useState("");
+  const [openUpdateProfileDialog, setOpenUpdateProfileDialog] = useState(false);
 
   const fetchProfileData = async () => {
     try {
@@ -36,39 +36,39 @@ export default function Profile() {
     setUpdatedData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const inviteFriendHandler = async ( ) =>{
+  const inviteFriendHandler = async () => {
     try {
 
-      const {data} = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/inviteFriend`,{friendMail:friendEmail},{
-        headers:{
-          Authorization:localStorage.getItem("token")
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/inviteFriend`, { friendMail: friendEmail }, {
+        headers: {
+          Authorization: localStorage.getItem("token")
         }
       })
 
       toast.success(data.message);
       setFriendEmail("");
-      
+
     } catch (error) {
       console.log(error);
       toast.error(error?.response?.data?.error?.message)
     }
   }
 
-  const closeProfileUpdateDialog = useCallback(()=>{
+  const closeProfileUpdateDialog = useCallback(() => {
     setOpenUpdateProfileDialog(false);
-  },[]);
+  }, []);
 
-  const handleNewProfilePic = useCallback((newProfilePic)=>{
-    setUserData(()=>{
+  const handleNewProfilePic = useCallback((newProfilePic) => {
+    setUserData(() => {
       return {
 
-      ...userData,
-      profilePic:newProfilePic
+        ...userData,
+        profilePic: newProfilePic
       }
     })
-  },[]);
+  }, []);
 
-  const handleProfileClick = async()=>{
+  const handleProfileClick = async () => {
     setOpenUpdateProfileDialog(true);
   }
 
@@ -91,7 +91,7 @@ export default function Profile() {
           <button className='absolute bottom-0  right-2 outline bg-white p-2    rounded-xl'
             onClick={handleProfileClick}
           >
-            <CameraIcon/>
+            <CameraIcon />
           </button>
           {/* <Button variant="contained" color="primary" size="small" onClick={handleEditToggle}>
             {editable ? 'Cancel' : 'Edit Profile'}
@@ -140,26 +140,57 @@ export default function Profile() {
               Invite a Friend to Chat
             </Typography>
             <TextField
-            fullWidth
-            name="email"
-            label="Email"
-            type="email"
-            variant="outlined"
-            margin="normal"
-            value={friendEmail}
-            onChange={(e)=>setFriendEmail(e.target.value)}
-          />
-          <button
-          className='bg-blue-400 text-white rounded-lg px-4 py-3 hover:text-blue-400 hover:bg-white hover:outline hover:outline-blue-400'
-          onClick={inviteFriendHandler}
-          >
-            Invite
-          </button>
+              fullWidth
+              name="email"
+              label="Email"
+              type="email"
+              variant="outlined"
+              margin="normal"
+              value={friendEmail}
+              onChange={(e) => setFriendEmail(e.target.value)}
+            />
+            <button
+              className='bg-blue-400 text-white rounded-lg px-4 py-3 hover:text-blue-400 hover:bg-white hover:outline hover:outline-blue-400'
+              onClick={inviteFriendHandler}
+            >
+              Invite
+            </button>
 
+          </section>
+          <section className='px-3 py-3 rounded-lg shadow-lg'>
+            <Typography variant="h5" color="initial">Blocked Users</Typography>
+            <section className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'>
+              {
+                userData?.blockedUsers?.map((user) => {
+                  return <section className='w-full px-3 py-2 flex justify-between  cursor-pointer bg-blue-300'
+                    title={`Click Here to get More Info About ${user.name}`}
+                  >
+                    <section className='px-3'>
+                      <Avatar
+                        src={(user?.profilePic || ProfileIcon)}
+                        alt="Preview"
+                        sx={{
+                          width: 50, height: 50, outline: "2px solid #ffffff",
+                          outlineOffset: "2px",background:"#ffffff"
+                        }}
+                      />
+                    </section>
+                    <section>
+
+                      <Typography variant="h6" color="#ffffff" >
+                        {
+                          user.name
+                        }
+                      </Typography>
+                    </section>
+                  </section>
+                })
+              }
+            </section>
           </section>
         </section>
       </section>
-      <ProfileDialog open={openUpdateProfileDialog} handleClose={closeProfileUpdateDialog} data={userData} handleNewProfilePic={handleNewProfilePic}/>
+      <ProfileDialog open={openUpdateProfileDialog} handleClose={closeProfileUpdateDialog} data={userData} handleNewProfilePic={handleNewProfilePic} />
     </>
   );
 
