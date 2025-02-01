@@ -16,7 +16,8 @@ function App() {
         <OverlayProvider>
             <Navbar/>
             <Router/>
-            <ToastContainer />
+            <ToastContainer  onClick={()=>{
+            }}/>
         </OverlayProvider>
       </AuthProvider>
     </BrowserRouter>

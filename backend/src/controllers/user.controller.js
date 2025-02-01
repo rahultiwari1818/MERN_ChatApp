@@ -3,7 +3,7 @@ import { client } from "../config/redis.config.js";
 import { createHTMLBody, generateHashPassword, generateOTP, generateToken, verifyPassword } from "../utils/utils.js";
 import User from "../models/users.models.js";
 import Messages from "../models/messages.models.js";
-import { isUserOnline } from "../socket/app.socket.js";
+import { getReceiverSocketId, io, isUserOnline } from "../socket/app.socket.js";
 import { uploadToCloudinary } from "../config/cloudinary.config.js";
 
 
@@ -339,6 +339,10 @@ export const blockUser = async (req, res) => {
         await User.findByIdAndUpdate(_id, {
             $push: { blockedUsers: userIdToBlock }
         });
+        
+        const receiverSocketId = getReceiverSocketId(userIdToBlock);
+        
+        io.to(receiverSocketId).emit("userBlocked", {_id:_id});
 
         return res.status(200).json({ message: "User blocked successfully.", result: true });
     } catch (error) {
@@ -355,6 +359,11 @@ export const unblockUser = async (req, res) => {
         await User.findByIdAndUpdate({ _id: userId }, {
             $pull: { blockedUsers: userIdToUnblock }
         });
+
+        const receiverSocketId = getReceiverSocketId(userIdToUnblock);
+        
+        io.to(receiverSocketId).emit("userUnblocked", {_id:userId});
+
 
         return res.status(200).json({ message: "User unblocked successfully.", result: true });
     } catch (error) {

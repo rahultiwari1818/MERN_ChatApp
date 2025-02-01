@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import notificationSound from "../Assets/Sounds/notification.mp3";
 import { toast } from 'react-toastify';
+import ToastBox from '../Components/Common/ToastBox';
 
 // Create Chat Context
 const ChatContext = createContext();
@@ -19,28 +20,40 @@ export default function ChatProvider({ children }) {
 
     const changeRecipient = async (recipient) => {
         // console.log("recipient selected :",recipient);
-        setRecipient(()=>recipient);
+        setRecipient(() => recipient);
     };
-    
-    const changeBlockingStatus = async(status)=>{
-        setRecipient((old)=>{
+
+    const changeBlockingStatus = async (status) => {
+        setRecipient((old) => {
             return {
                 ...old,
-                isBlocked : status
+                isBlocked: status
             }
         })
     }
 
-    const newMessageHandler = async(newMessage)=>{
+    const newMessageHandler = async (newMessage) => {
         const sound = new Audio(notificationSound);
         sound?.play();
-        console.log(newMessage, recipient,"message")
+        console.log(newMessage, "message")
         if (recipient._id === newMessage.senderId) {
             setNewMessage(newMessage);
-            
+
         }
-        else{
-            toast.info("New Message");
+        else {
+            toast(
+                <ToastBox newMessage={newMessage}/>
+            , {
+                position: "top-center",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: false,
+                progress: undefined,
+                theme: "light",
+            });
+          
         }
     }
 
@@ -62,14 +75,14 @@ export default function ChatProvider({ children }) {
 
 
         return () => {
-                socket.off('newMessage');
-        };        
-    },[recipient]);
+            socket.off('newMessage');
+        };
+    }, [recipient]);
 
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient,changeBlockingStatus }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus }}>
             {children}
         </ChatContext.Provider>
     );

@@ -51,7 +51,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                 message: messageToBeSent,
                 recipient: recipient._id,
             };
-            await axios.post(
+            const {data} =  await axios.post(
                 `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`,
                 dataToBeSent,
                 {
@@ -60,7 +60,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                     },
                 }
             );
-            setMessages((old) => [...old, { message: messageToBeSent, timestamp: new Date().toISOString(), isSender: true }]);
+            setMessages((old) => [...old,  {...data.data, isSender: true} ]);
             setMessageToBeSent("");
         } catch (error) {
             console.log(error);
