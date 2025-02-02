@@ -43,7 +43,12 @@ io.on("connection",(socket)=>{
             _id = decoded._id;
             userSocketMap[_id] = socket.id; 
             console.log("User Connected :",_id);
+            io.emit("userCameOnline",{
+                _id:_id
+            })
         };
+
+
 
         offlineMessages.forEach((message) => {
             if (message.recipientId === _id) {
@@ -55,6 +60,9 @@ io.on("connection",(socket)=>{
         socket.on("disconnect",async()=>{
             console.log("User Disconnected : ",_id);
             if(!_id) return;
+            io.emit("userGoneOffline",{
+                _id:_id
+            })
             await User.findByIdAndUpdate(_id, { lastSeen: Date.now() });
             delete userSocketMap[_id];
     

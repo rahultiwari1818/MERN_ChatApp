@@ -17,7 +17,6 @@ export default function ChatProvider({ children }) {
     const [newMessage, setNewMessage] = useState("");
     const [recipient, setRecipient] = useState("");
 
-
     const changeRecipient = async (recipient) => {
         // console.log("recipient selected :",recipient);
         setRecipient(() => recipient);
@@ -57,6 +56,41 @@ export default function ChatProvider({ children }) {
         }
     }
 
+    const blockUserHandler =  async({_id}) =>{
+        if(recipient._id == _id){
+            changeBlockingStatus(true);
+        }
+    }
+
+    const unblockUserHandler =  async({_id}) =>{
+        if(recipient._id == _id){
+            changeBlockingStatus(false);
+        }
+    }
+
+    const cameOnlineHandler = async({_id}) =>{
+        if(recipient?._id == _id ){
+            setRecipient(()=>{
+                return {
+                    ...recipient,
+                    isOnline:true
+                }
+            })
+        }
+    }
+
+    
+    const gotOfflineHandler = async({_id}) =>{
+        if(recipient?._id == _id ){
+            setRecipient(()=>{
+                return {
+                    ...recipient,
+                    isOnline:false
+                }
+            })
+        }
+    }
+
     useEffect(() => {
 
         socket.on("connect", () => {
@@ -72,6 +106,14 @@ export default function ChatProvider({ children }) {
 
 
         socket?.on("newMessage", newMessageHandler);
+
+        socket?.on("userBlocked",blockUserHandler);
+
+        socket?.on("userUnblocked",unblockUserHandler);
+
+        socket?.on("userCameOnline",cameOnlineHandler)
+
+        socket?.on("userGoneOffline",gotOfflineHandler)
 
 
         return () => {

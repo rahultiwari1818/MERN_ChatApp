@@ -36,6 +36,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
         setMessages((old) => [...old, newMessage]);
     }, [newMessage])
 
+
     useEffect(() => {
         getMessages();
     }, [recipient]);
