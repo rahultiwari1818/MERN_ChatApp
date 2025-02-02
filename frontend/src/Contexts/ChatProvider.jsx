@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import notificationSound from "../Assets/Sounds/notification.mp3";
 import { toast } from 'react-toastify';
 import ToastBox from '../Components/Common/ToastBox';
+import axios from 'axios';
 
 // Create Chat Context
 const ChatContext = createContext();
@@ -16,6 +17,27 @@ const socket = io(process.env.REACT_APP_API_URL, {
 export default function ChatProvider({ children }) {
     const [newMessage, setNewMessage] = useState("");
     const [recipient, setRecipient] = useState("");
+
+    const [users, setUsers] = useState([]);
+
+
+    const getUsers = async (email) => {
+        try {
+            const { data } = await axios.get(
+                `${process.env.REACT_APP_API_URL}/api/v1/users/getUsers?friendMail=${email}`,
+                {
+                    headers: {
+                        Authorization: localStorage.getItem('token'),
+                    },
+                }
+            );
+            setUsers(data.data.length === 0 ? [] : data.data);
+        } catch (error) {
+            console.log(error?.response);
+            //   if (error?.response?.status === 400) navigate('/');
+        }
+    };
+
 
     const changeRecipient = async (recipient) => {
         // console.log("recipient selected :",recipient);
@@ -35,57 +57,57 @@ export default function ChatProvider({ children }) {
         const sound = new Audio(notificationSound);
         sound?.play();
         console.log(newMessage, "message")
-        if (recipient._id === newMessage.senderId) {
+        if (recipient?._id === newMessage.senderId) {
             setNewMessage(newMessage);
 
         }
         else {
             toast(
-                <ToastBox newMessage={newMessage}/>
-            , {
-                position: "top-center",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: false,
-                progress: undefined,
-                theme: "light",
-            });
-          
+                <ToastBox newMessage={newMessage} changeRecipient={changeRecipient} users={users}/>
+                , {
+                    position: "top-center",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: false,
+                    progress: undefined,
+                    theme: "light",
+                });
+
         }
     }
 
-    const blockUserHandler =  async({_id}) =>{
-        if(recipient._id == _id){
+    const blockUserHandler = async ({ _id }) => {
+        if (recipient?._id === _id) {
             changeBlockingStatus(true);
         }
     }
 
-    const unblockUserHandler =  async({_id}) =>{
-        if(recipient._id == _id){
+    const unblockUserHandler = async ({ _id }) => {
+        if (recipient?._id === _id) {
             changeBlockingStatus(false);
         }
     }
 
-    const cameOnlineHandler = async({_id}) =>{
-        if(recipient?._id == _id ){
-            setRecipient(()=>{
+    const cameOnlineHandler = async ({ _id }) => {
+        if (recipient?._id === _id) {
+            setRecipient(() => {
                 return {
                     ...recipient,
-                    isOnline:true
+                    isOnline: true
                 }
             })
         }
     }
 
-    
-    const gotOfflineHandler = async({_id}) =>{
-        if(recipient?._id == _id ){
-            setRecipient(()=>{
+
+    const gotOfflineHandler = async ({ _id }) => {
+        if (recipient?._id === _id) {
+            setRecipient(() => {
                 return {
                     ...recipient,
-                    isOnline:false
+                    isOnline: false
                 }
             })
         }
@@ -107,13 +129,13 @@ export default function ChatProvider({ children }) {
 
         socket?.on("newMessage", newMessageHandler);
 
-        socket?.on("userBlocked",blockUserHandler);
+        socket?.on("userBlocked", blockUserHandler);
 
-        socket?.on("userUnblocked",unblockUserHandler);
+        socket?.on("userUnblocked", unblockUserHandler);
 
-        socket?.on("userCameOnline",cameOnlineHandler)
+        socket?.on("userCameOnline", cameOnlineHandler)
 
-        socket?.on("userGoneOffline",gotOfflineHandler)
+        socket?.on("userGoneOffline", gotOfflineHandler)
 
 
         return () => {
@@ -124,7 +146,7 @@ export default function ChatProvider({ children }) {
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus,users,getUsers }}>
             {children}
         </ChatContext.Provider>
     );

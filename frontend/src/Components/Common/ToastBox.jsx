@@ -1,9 +1,15 @@
 import { Avatar } from '@mui/material'
 import React from 'react'
 
-export default function ToastBox({newMessage }) {
+export default function ToastBox({newMessage,changeRecipient,users }) {
+    // const {users} = useUserProvider();
     return (
-        <section className='flex justify-between items-center px-2 py-2'>
+        <section className='flex justify-between items-center px-2 py-2'
+        onClick={()=>{
+            const recipient = users?.find((user)=> user._id === newMessage.senderId);
+            changeRecipient(recipient)
+        }}
+        >
             <section>
                 <Avatar
                     src={`${newMessage.senderProfilePic}`}

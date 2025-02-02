@@ -9,30 +9,33 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../Utils/utils';
 import { useChat } from '../../Contexts/ChatProvider';
+import { useUserProvider } from '../../Contexts/UserProvider';
 
 export default function UserList({ handleClick }) {
-  const [users, setUsers] = useState([]);
+  // const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const [searchEmail, setSearchEmail] = useState('');
 
+  const {users,getUsers} = useChat();
+
   const {changeRecipient,newMessage,recipient} = useChat();
 
-  const getUsers = async (email) => {
-    try {
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/v1/users/getUsers?friendMail=${email}`,
-        {
-          headers: {
-            Authorization: localStorage.getItem('token'),
-          },
-        }
-      );
-      setUsers(data.data.length === 0 ? [] : data.data);
-    } catch (error) {
-      console.log(error?.response);
-      if (error?.response?.status === 400) navigate('/');
-    }
-  };
+  // const getUsers = async (email) => {
+  //   try {
+  //     const { data } = await axios.get(
+  //       `${process.env.REACT_APP_API_URL}/api/v1/users/getUsers?friendMail=${email}`,
+  //       {
+  //         headers: {
+  //           Authorization: localStorage.getItem('token'),
+  //         },
+  //       }
+  //     );
+  //     setUsers(data.data.length === 0 ? [] : data.data);
+  //   } catch (error) {
+  //     console.log(error?.response);
+  //     if (error?.response?.status === 400) navigate('/');
+  //   }
+  // };
 
   // Debounced function
   const debouncedGetUsers = useCallback(

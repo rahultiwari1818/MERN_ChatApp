@@ -1,8 +1,9 @@
-import React, {  useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import UserList from '../Components/UserList/UserList';
 import ChatScreen from '../Components/ChatScreen/ChatScreen';
 import { ReactComponent as BarIcon } from ".././Assets/SVGs/Bar.svg";
 import ChatProvider from '../Contexts/ChatProvider';
+import UserProvider from '../Contexts/UserProvider';
 
 
 
@@ -26,7 +27,7 @@ export default function MainApp() {
     else {
       setIsVisibleUserList(true);
       setShowButtons(false);
-      
+
       if (width > 1600) {
         setChangeTextBoxCss(() => "left-[580px]");
       } else if (width > 1500) {
@@ -63,34 +64,36 @@ export default function MainApp() {
     setIsVisibleUserList(true);
   }
 
-  const handleHideClick = useCallback(()=>{
-    
+  const handleHideClick = useCallback(() => {
+
     if (window.innerWidth > 1000) return;
     setIsVisibleUserList(false);
-  },[]);
+  }, []);
 
 
   return (
-    <ChatProvider>
+    // <UserProvider>
+      <ChatProvider>
 
-      <section className='flex'>
-        {
-          showButtons
-          &&
-          <button
+        <section className='flex'>
+          {
+            showButtons
+            &&
+            <button
 
-            className='bg-blue-300 px-3 py-3 rounded-tr-lg rounded-br-lg top-6  absolute left-0 z-10 cursor-pointer'
-            onClick={handleBarClick}
-          >
-            <BarIcon className=" h-4 w-4 lg:h-10 lg:w-10 md:h-6 md:w-6" />
-          </button>
-        }
-        {
-          isVisibleUserList &&
-          <UserList handleClick={handleHideClick}    />
-        }
-        <ChatScreen  changeTextBoxCss={changeTextBoxCss} />
-      </section>
-    </ChatProvider>
+              className='bg-blue-300 px-3 py-3 rounded-tr-lg rounded-br-lg top-6  absolute left-0 z-10 cursor-pointer'
+              onClick={handleBarClick}
+            >
+              <BarIcon className=" h-4 w-4 lg:h-10 lg:w-10 md:h-6 md:w-6" />
+            </button>
+          }
+          {
+            isVisibleUserList &&
+            <UserList handleClick={handleHideClick} />
+          }
+          <ChatScreen changeTextBoxCss={changeTextBoxCss} />
+        </section>
+      </ChatProvider>
+    // </UserProvider>
   )
 }
