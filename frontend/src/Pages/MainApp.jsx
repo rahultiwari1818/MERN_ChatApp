@@ -3,7 +3,6 @@ import UserList from '../Components/UserList/UserList';
 import ChatScreen from '../Components/ChatScreen/ChatScreen';
 import { ReactComponent as BarIcon } from ".././Assets/SVGs/Bar.svg";
 import ChatProvider from '../Contexts/ChatProvider';
-import UserProvider from '../Contexts/UserProvider';
 
 
 

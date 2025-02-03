@@ -2,6 +2,7 @@ import { Avatar, Box, ListItem, ListItemAvatar, ListItemText, Typography } from 
 import React from 'react';
 import  ProfileIcon from "../../Assets/SVGs/Profile.svg"
 import { useChat } from '../../Contexts/ChatProvider';
+import  OnlineIcon from "../../Assets/Images/OnlineIcon.png";
 export default function User({ user,handleClick }) {
     const {changeRecipient} = useChat();
   return (
@@ -14,9 +15,15 @@ export default function User({ user,handleClick }) {
       }}
       
     >
-      <ListItemAvatar>
+      <ListItemAvatar className='relative'>
         <Avatar src={user?.profilePic  ? user?.profilePic: ProfileIcon} alt={user.name} className={`${!user?.profilePic ?  'rounded outline outline-white p-2 bg-white' : '' } `}     sx={!user?.profilePic ? { width: 40, height: 40 } : {backgroundColor:"#ffffff"}} 
       />
+      {
+        user?.isOnline 
+        &&
+       <img src={OnlineIcon} alt="icon" className='h-16 w-10 absolute top-1 left-3' />
+      }
+      
       </ListItemAvatar>
       <ListItemText
         primary={
@@ -26,6 +33,7 @@ export default function User({ user,handleClick }) {
           >
             {user.name}
           </Typography>
+                 
         }
         secondary={
           <Box display="flex" justifyContent="space-between" alignItems="center">

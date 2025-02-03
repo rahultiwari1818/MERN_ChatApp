@@ -9,7 +9,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../Utils/utils';
 import { useChat } from '../../Contexts/ChatProvider';
-import { useUserProvider } from '../../Contexts/UserProvider';
 
 export default function UserList({ handleClick }) {
   // const [users, setUsers] = useState([]);

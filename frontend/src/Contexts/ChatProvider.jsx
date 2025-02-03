@@ -21,6 +21,25 @@ export default function ChatProvider({ children }) {
     const [users, setUsers] = useState([]);
 
 
+    const sortUser = (senderId, message) => {
+        const updatedUserList = [...users]; // Clone the existing user list
+        const userIndex = updatedUserList.findIndex(
+            (user) =>
+                user._id === senderId 
+        );
+
+        // If the user exists in the list and the chat is not open
+          // Remove the user from its current position
+            const user = updatedUserList.splice(userIndex, 1)?.at(0);
+            user.lastMessage = message
+
+
+            // Add the user to the top of the list
+            updatedUserList?.unshift(user);
+        console.log(updatedUserList,"ul")
+        setUsers(updatedUserList);
+    }
+
     const getUsers = async (email) => {
         try {
             const { data } = await axios.get(
@@ -57,13 +76,14 @@ export default function ChatProvider({ children }) {
         const sound = new Audio(notificationSound);
         sound?.play();
         console.log(newMessage, "message")
+        sortUser(newMessage?.senderId, newMessage?.message);
         if (recipient?._id === newMessage.senderId) {
             setNewMessage(newMessage);
 
         }
         else {
             toast(
-                <ToastBox newMessage={newMessage} changeRecipient={changeRecipient} users={users}/>
+                <ToastBox newMessage={newMessage} changeRecipient={changeRecipient} users={users} />
                 , {
                     position: "top-center",
                     autoClose: 3000,
@@ -146,7 +166,7 @@ export default function ChatProvider({ children }) {
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus,users,getUsers }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers }}>
             {children}
         </ChatContext.Provider>
     );

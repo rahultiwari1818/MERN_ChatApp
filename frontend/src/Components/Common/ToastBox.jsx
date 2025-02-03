@@ -1,5 +1,6 @@
 import { Avatar } from '@mui/material'
 import React from 'react'
+import  ProfileIcon from "../../Assets/SVGs/Profile.svg"
 
 export default function ToastBox({newMessage,changeRecipient,users }) {
     // const {users} = useUserProvider();
@@ -11,21 +12,14 @@ export default function ToastBox({newMessage,changeRecipient,users }) {
         }}
         >
             <section>
-                <Avatar
-                    src={`${newMessage.senderProfilePic}`}
-                    alt='sender profile pic'
-                    sx={{
-                        width: 50, height: 50, outline: "2px solid #ffffff",
-                        outlineOffset: "2px",background:"#ffffff"
-                    }}
-                    className='rounded outline outline-white p-2 bg-white'
-                />
+             <Avatar src={newMessage?.senderProfilePic  ? newMessage?.senderProfilePic: ProfileIcon} alt={"user.name"} className={`${!newMessage?.senderProfilePic ?  'rounded outline outline-white p-2 bg-white' : '' } `}     sx={!newMessage?.senderProfilePic ? { width: 40, height: 40 } : {backgroundColor:"#ffffff"}} 
+             />
             </section>
             <section className='flex flex-col justify-between'>
                 <p className='font-bold'>{newMessage.senderName}</p>
                 <p>
                     {
-                        newMessage.message
+                        newMessage.message.trim(10)
                     }
                 </p>
             </section>
