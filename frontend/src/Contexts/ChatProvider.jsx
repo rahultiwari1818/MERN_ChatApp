@@ -19,6 +19,7 @@ export default function ChatProvider({ children }) {
     const [recipient, setRecipient] = useState("");
 
     const [users, setUsers] = useState([]);
+    const [messageStatus,setMessageStatus] = useState("");
 
 
     const sortUser = (senderId, message) => {
@@ -36,7 +37,6 @@ export default function ChatProvider({ children }) {
 
             // Add the user to the top of the list
             updatedUserList?.unshift(user);
-        console.log(updatedUserList,"ul")
         setUsers(updatedUserList);
     }
 
@@ -78,8 +78,9 @@ export default function ChatProvider({ children }) {
         console.log(newMessage, "message")
         sortUser(newMessage?.senderId, newMessage?.message);
         if (recipient?._id === newMessage.senderId) {
+            
             setNewMessage(newMessage);
-
+            socket?.emit("markMessageAsRead",{_id:newMessage?._id,senderId:newMessage?.senderId});
         }
         else {
             toast(
@@ -133,6 +134,11 @@ export default function ChatProvider({ children }) {
         }
     }
 
+    const markMessageAsReadHandler = async(message) =>{
+        setMessageStatus(message)
+        console.log("read : ",message)
+    }
+
     useEffect(() => {
 
         socket.on("connect", () => {
@@ -157,6 +163,10 @@ export default function ChatProvider({ children }) {
 
         socket?.on("userGoneOffline", gotOfflineHandler)
 
+        socket?.emit("markConversationAsRead",{senderId:recipient?._id});
+
+        socket?.on("messageRead",markMessageAsReadHandler)
+
 
         return () => {
             socket.off('newMessage');
@@ -166,7 +176,7 @@ export default function ChatProvider({ children }) {
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus  }}>
             {children}
         </ChatContext.Provider>
     );

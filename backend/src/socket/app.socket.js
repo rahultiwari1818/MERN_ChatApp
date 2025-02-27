@@ -49,6 +49,22 @@ io.on("connection",(socket)=>{
         };
 
 
+        socket?.on("markMessageAsRead",(newmessage)=>{
+            // call the controller to handle read messages
+            console.log("s:",newmessage)
+            console.log("sender : ",userSocketMap[newmessage?.senderId])
+            const senderId = userSocketMap[newmessage?.senderId];
+            socket.to(senderId).emit("messageRead",newmessage)
+        })
+
+        
+        socket?.on("markConversationAsRead",(newmessage)=>{
+            // call the controller to handle read messages
+            console.log("conv : ",newmessage)
+        })
+
+        
+
 
         offlineMessages.forEach((message) => {
             if (message.recipientId === _id) {
@@ -70,9 +86,13 @@ io.on("connection",(socket)=>{
     } catch (error) {
         console.log("Socket Error : ",error);
     }
+
+    
+    
 	
 
 })
+
 
 
 export  {server,io,app};

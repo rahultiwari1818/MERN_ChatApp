@@ -15,10 +15,22 @@ const MesssagesSchema = new Schema({
         required:true,
         type:String
     },
+    isSent:{
+        type:Boolean,
+        default:false
+    },
+    isReceived:{
+        type:Boolean,
+        default:false
+    },
+    isRead:{
+        type:Boolean,
+        default:false
+    },
     timestamp:{
         required:true,
         type:Date,
-        default:Date.now()
+        default:Date.now
     },
 });
 

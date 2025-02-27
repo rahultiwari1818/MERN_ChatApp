@@ -55,11 +55,13 @@ export const sendMessage = async (req, res) => {
                 participants: [senderId, recipient],
             });
         }
-
+        const receiverSocketId = getReceiverSocketId(recipient);
         const newMessage = new Messages({
             senderId,
             recipientId: recipient,
             message,
+            isSent:true,
+            isReceived:receiverSocketId?true:false
         });
 
         if (newMessage) {
@@ -83,7 +85,7 @@ export const sendMessage = async (req, res) => {
             senderId:populatedMessage.senderId._id
         };
 
-        const receiverSocketId = getReceiverSocketId(recipient);
+
         if (receiverSocketId) {
             io.to(receiverSocketId).emit("newMessage", messageToBeSent);
         }

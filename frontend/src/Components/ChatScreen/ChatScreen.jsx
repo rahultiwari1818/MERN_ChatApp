@@ -11,7 +11,9 @@ export default function ChatScreen({ changeTextBoxCss }) {
     const [messageToBeSent, setMessageToBeSent] = useState("");
     const [messages, setMessages] = useState([]);
     const messageBoxRef = useRef(null);
-    const { newMessage, recipient } = useChat();
+    const { newMessage, recipient,messageStatus } = useChat();
+
+    
 
     const getMessages = async () => {
         try {
@@ -32,12 +34,39 @@ export default function ChatScreen({ changeTextBoxCss }) {
             messageBoxRef.current.scrollTop = messageBoxRef.current.scrollHeight;
         }
     }
+
     useEffect(() => {
         setMessages((old) => [...old, newMessage]);
     }, [newMessage])
 
+    useEffect(()=>{
+        setMessages(()=>{
+            const mappedMessages = messages?.map((message)=>{
+                console.log("catched : ",message._id,messageStatus)
+                if(message?._id === message?._id){
+                    return {
+                        ...message,
+                        isRead:true
+                    }
+                }
+                else return message;
+            });
+
+            return mappedMessages;
+        })
+    },[messageStatus]);
+
+
+    // const markAsRead = async() =>{
+    //     if(!recipient) return;
+        
+    //     // const {data} = await axios.patch(`${process.env.REACT_APP_API_URL}/api/v1/messages/markAsRead/${recipient?._id}`)
+    //     io
+
+    // }
 
     useEffect(() => {
+        // markAsRead();
         getMessages();
     }, [recipient]);
 
@@ -76,7 +105,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
 
     return (
-        <section className={`h-[84vh] fixed right-0 bottom-5 top-[66px] lg:top-[85px]  overflow-hidden ${changeTextBoxCss}`}>
+        <section className={`h-[85vh] fixed right-0  top-[66px] lg:top-[85px] bg-image  overflow-hidden ${changeTextBoxCss}`}>
             {
                 recipient
                 &&
@@ -103,6 +132,9 @@ export default function ChatScreen({ changeTextBoxCss }) {
                                     isSender={message.isSender}
                                     key={message._id || message.timestamp}
                                     messageId={message._id}
+                                    isSent={message?.isSent}
+                                    isReceived={message?.isReceived}
+                                    isRead={message?.isRead}
                                     onDeletingMessage={onDeletingMessage}
                                 />
                             ))
@@ -129,7 +161,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                         ?
                         <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2  ${changeTextBoxCss} `}>
                             <Typography variant="h5" color="initial">
-                                {recipient.name} is Blocked By You. Unblock {recipient.name} to Start Chat.
+                                You Have Blocked {recipient.name}. Unblock {recipient.name} to Start Chat.
                             </Typography>
                         </section>
                         :

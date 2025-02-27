@@ -4,8 +4,12 @@ import { toast } from "react-toastify";
 import DialogComp from '../Common/Dialog';
 import axios from 'axios';
 import { formatDate } from '../../Utils/utils';
+import ReadTick from "../../Assets/Images/ReadTick.png";
+import DoubleTick from "../../Assets/Images/DoubleTick.png";
+import SingleTick from "../../Assets/Images/SingleTick.png";
+import NotSentIcon from "../../Assets/Images/NotSentIcon.png";
 
-export default function Message({ message, time, isSender, messageId, onDeletingMessage }) {
+export default function Message({ message, time, isSender, messageId, onDeletingMessage,isSent,isReceived,isRead }) {
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
@@ -45,38 +49,6 @@ export default function Message({ message, time, isSender, messageId, onDeleting
   }, []);
 
 
-  // const deleteHandle = async () => {
-  //   try {
-  //     if (!messageId) {
-  //       toast.error("Message ID is required.");
-  //       return;
-  //     }
-
-  //     console.log("Deleting message with ID:", messageId);
-
-  //     // Make the DELETE API call
-  //     const response = await axios.delete(
-  //       `${process.env.REACT_APP_API_URL}/api/v1/messages/${messageId}`,
-  //       {
-  //         headers: {
-  //           Authorization: localStorage.getItem("token"), // Include the token for authentication
-  //         },
-  //       }
-  //     );
-
-  //     if (response.data.result) {
-  //       toast.success(response.data.message || "Message deleted successfully.");
-  //       onDeletingMessage(messageId);
-  //     } else {
-  //       toast.error(response.data.message || "Failed to delete the message.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error while deleting the message:", error);
-  //     toast.error(
-  //       error.response?.data?.message || "An error occurred while deleting the message."
-  //     );
-  //   }
-  // };
 
 
   const closeDialog = useCallback(() => {
@@ -112,18 +84,43 @@ export default function Message({ message, time, isSender, messageId, onDeleting
           }}
         >
           <Typography  className='text-wrap text-xs md:text-sm lg:text-base'>{message}</Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              marginTop: '5px',
-              color: isSender ? '#cfe2ff' : '#aaa',
-              fontSize: '10px',
-              textAlign: 'right',
-            }}
-          >
-            {formatDate(time)}
-          </Typography>
+          <section className="flex justify-between items-center gap-2">
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                marginTop: '5px',
+                color: isSender ? '#cfe2ff' : '#aaa',
+                fontSize: '10px',
+                textAlign: 'right',
+              }}
+            >
+              {formatDate(time)}
+            </Typography>
+            {
+              isSender ?
+              (
+              
+              isRead
+              ?
+              
+              <img src={ReadTick} alt="read" srcset="" className='h-5 w-5'/>
+              
+              :
+              isReceived
+              ?
+              <img src={DoubleTick} alt="received" srcset="" className='h-5 w-5'/>
+              :
+              isSent
+              ?
+              <img src={SingleTick} alt="sent" srcset="" className='h-5 w-5'/>
+              :
+              <img src={NotSentIcon} alt="not sent" srcset="" className='h-5 w-5 '/>
+              )
+              :
+              <></>
+            }
+          </section>
         </Box>
       </Container>
       <DeletionDialogBox open={openDeleteDialog} handleClose={closeDialog} deleteHandler={deleteHandler} />

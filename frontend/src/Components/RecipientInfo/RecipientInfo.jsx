@@ -156,7 +156,7 @@ const UserDialog = ({ open, handleClose, profilePic, name, email, hasBlocked, is
                             }}
                             onClick={unblockHandler}
                         >
-                            UnBlock
+                            Unblock
                         </Button>
                         :
                         <Button

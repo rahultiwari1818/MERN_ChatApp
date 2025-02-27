@@ -11,6 +11,13 @@ export const registerUser = async (req, res) => {
     try {
 
         const { mail, password, name } = req.body;
+        const doesUserExists = await User.findOne({email:mail});
+        if(doesUserExists){
+            return res.status(401).json({
+                message:"User Already Exists.!",
+                result:false
+            })
+        }
         if ([password, name, mail].some(val => val === "" || val === undefined)) return res.status(400).json({ message: "Please Provide All The Required Fields.!", result: false });
         const hashedPasswd = await generateHashPassword(password);
         await User.create({
