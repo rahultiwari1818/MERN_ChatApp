@@ -60,7 +60,7 @@ io.on("connection",(socket)=>{
         
         socket?.on("markConversationAsRead",(newmessage)=>{
             // call the controller to handle read messages
-            console.log("conv : ",newmessage)
+            
         })
 
         

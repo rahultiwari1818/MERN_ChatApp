@@ -4,6 +4,7 @@ import {ReactComponent as ProfileIcon} from "../../Assets/SVGs/Profile.svg";
 import Menu from '../Menu/Menu.jsx';
 import { useAuth } from '../../Contexts/AuthProvider.jsx';
 import { useNavigate } from 'react-router-dom';
+import ChatProvider from '../../Contexts/ChatProvider.jsx';
 export default function Navbar() {
   const {  isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -19,9 +20,11 @@ export default function Navbar() {
         {
           isAuthenticated
           &&
-          <Menu 
-            Title={<ProfileIcon className="rounded-lg  cursor-pointer outline outline-blue-300 p-3"/>}
-          />
+          <ChatProvider>
+            <Menu 
+              Title={<ProfileIcon className="rounded-lg  cursor-pointer outline outline-blue-300 p-3"/>}
+            />
+          </ChatProvider>
         }
         
     </nav>

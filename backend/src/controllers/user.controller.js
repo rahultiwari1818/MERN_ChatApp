@@ -135,25 +135,10 @@ export const verifyOTP = async (req, res) => {
 
 export const getUsers = async (req, res) => {
     try {
-        const { friendMail } = req.query;
-        const userId = req.user._id; // Current logged-in user
+        const userId = req.user._id;
+        const users = await User.find({ _id: { $ne: userId } }, { password: 0 });
+        const userIds = users.map(user => user._id);
 
-        // Base query to exclude the current user
-        let query = { _id: { $ne: userId } };
-
-        // If friendMail is provided, search by email or name
-        if (friendMail?.trim()) {
-            query.$or = [
-                { email: { $regex: friendMail.trim(), $options: 'i' } },
-                { name: { $regex: friendMail.trim(), $options: 'i' } }
-            ];
-        }
-
-        // Fetch users excluding the password field
-        const users = await User.find(query, { password: 0 });
-        const userIds = users.map(user => user._id); // Extract user IDs
-
-        // Fetch latest messages involving the current user
         const messages = await Messages.aggregate([
             {
                 $match: {
@@ -163,48 +148,27 @@ export const getUsers = async (req, res) => {
                     ]
                 }
             },
-            { $sort: { createdAt: -1 } }, // Sort by newest message first
+            { $sort: { createdAt: -1 } },
             {
                 $group: {
                     _id: { $cond: [{ $eq: ["$sender", userId] }, "$receiver", "$sender"] },
-                    lastMessage: { $first: "$content" },
                     lastMessageTime: { $first: "$createdAt" }
                 }
             }
         ]);
 
-        // Map users to their last message
-        const userDetails = await User.findById({ _id: userId });
-        const userData = users.map(user => {
-            const messageData = messages.find(m => m._id.toString() === user._id.toString());
-            let isOnline = isUserOnline(user._id);
-            // console.log(user.blockedUsers)
-            const hasBlocked = user.blockedUsers.findIndex((id) => id.toString() === req.user._id) >= 0 ? true : false;
-            const isBlocked = userDetails.blockedUsers.findIndex((id) => id.toString() === user._id.toString()) >= 0 ? true : false;
-
-            return {
-                ...user.toObject(),
-                lastMessage: messageData?.lastMessage || null,
-                lastMessageTime: messageData?.lastMessageTime || null,
-                isOnline,
-                hasBlocked,
-                isBlocked
-            };
-        });
-
-        // Sort by lastMessageTime (most recent first), fall back to no messages
-        userData.sort((a, b) => {
-            if (b.lastMessageTime && a.lastMessageTime) {
-                return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
-            }
-            if (b.lastMessageTime) return 1;
-            if (a.lastMessageTime) return -1;
+        users.sort((a, b) => {
+            const aTime = messages.find(m => m._id.toString() === a._id.toString())?.lastMessageTime;
+            const bTime = messages.find(m => m._id.toString() === b._id.toString())?.lastMessageTime;
+            if (bTime && aTime) return new Date(bTime) - new Date(aTime);
+            if (bTime) return 1;
+            if (aTime) return -1;
             return 0;
         });
 
         return res.status(200).json({
-            message: "Users Fetched Successfully.",
-            data: userData,
+            message: "Users sorted by latest message.",
+            data: users,
             result: true
         });
 
@@ -213,6 +177,7 @@ export const getUsers = async (req, res) => {
         return res.status(500).json({ error });
     }
 };
+
 
 
 

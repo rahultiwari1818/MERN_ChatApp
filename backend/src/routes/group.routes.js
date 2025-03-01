@@ -1,9 +1,15 @@
 import express from "express";
-import { verifyUser } from "../middlewares/auth.middleware";
-import { addMembers, changeDescription, creategroup, getChat, removeAdmin, removeMembers } from "../controllers/group.controller";
+import { verifyUser } from "../middlewares/auth.middleware.js";
+import { addMembers, changeDescription, creategroup, getChat, removeAdmin, removeMembers } from "../controllers/group.controller.js";
 const router = express.Router();
+import multer from 'multer';
+import { storage } from "../config/cloudinary.config.js";
 
-router.post("/createGroup",verifyUser,creategroup);
+const upload = multer({ storage: storage });
+
+
+
+router.post("/createGroup",verifyUser,upload.single("groupImage"),creategroup);
 
 router.get("/getChat/:groupId",verifyUser,getChat);
 

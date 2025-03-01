@@ -44,7 +44,7 @@ export default function User({ user,handleClick }) {
                 maxWidth: '70%',
                 color: 'inherit', // Text adapts to hover color
               }}
-              className=''
+              className='text-green-900'
             >
               {user?.lastMessage}
             </Typography>
@@ -55,7 +55,7 @@ export default function User({ user,handleClick }) {
                 color: 'inherit', // Adapts to hover color
               }}
             >
-              {user.time}
+              {user?.noOfUnreadMessages > 1 ? user?.noOfUnreadMessages : ""}
             </Typography>
           </Box>
         }

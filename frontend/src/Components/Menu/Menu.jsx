@@ -4,13 +4,17 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Contexts/AuthProvider';
+import {ReactComponent as LogoutIcon} from "../../Assets/SVGs/LoginIcon.svg";
+import CreateGroupDialog from '../CreateGroupDialog/CreateGroupDialog';
 
 export default function MenuBasic({Title}) {
     const {  logout } = useAuth();
 
     const [anchorEl, setAnchorEl] = React.useState(null);
+    const [openCreateGroupDialog,setOpenGroupDialog] = React.useState(false);
     const open = Boolean(anchorEl);
     const navigate = useNavigate();
+
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
     };
@@ -18,6 +22,12 @@ export default function MenuBasic({Title}) {
       setAnchorEl(null);
     };
     
+
+
+    const closeCreateGroupDialog = () =>{
+      setOpenGroupDialog(false);
+    }
+
     const openProfile = () =>{
         navigate("/profile");
         handleClose();
@@ -47,8 +57,14 @@ export default function MenuBasic({Title}) {
           }}
         >
           <MenuItem onClick={openProfile}>Profile</MenuItem>
-          <MenuItem onClick={logoutUser}>Logout</MenuItem>
+          <MenuItem 
+          onClick={()=>{
+            setOpenGroupDialog(true);
+          }}
+          >Create Group</MenuItem>
+          <MenuItem onClick={logoutUser} className='flex justify-between gap-1'>Logout <LogoutIcon/></MenuItem>
         </Menu>
+        <CreateGroupDialog open={openCreateGroupDialog} handleClose={closeCreateGroupDialog}/>
       </div>
     );
 }

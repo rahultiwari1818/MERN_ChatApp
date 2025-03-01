@@ -5,6 +5,7 @@ import  {connectToRedis}  from "./config/redis.config.js";
 import {server,app} from "./socket/app.socket.js";
 import  userRouter from "./routes/users.routes.js";
 import  messageRouter from "./routes/messages.routes.js";
+import  groupRouter from "./routes/group.routes.js";
 import cors from "cors";
 const port = process.env.PORT;
 
@@ -24,6 +25,7 @@ app.use('/uploads', express.static('uploads'));
 
 app.use("/api/v1/users",userRouter);
 app.use("/api/v1/messages",messageRouter);
+app.use("/api/v1/group",groupRouter);
 
 
 
