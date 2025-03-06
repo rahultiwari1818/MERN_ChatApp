@@ -1,8 +1,9 @@
 import express from "express";
-import { loginUser, registerUser, sendOTP, verifyOTP,getUserDetails, inviteFriend, getUsers, changeProfilePic, blockUser, unblockUser } from "../controllers/user.controller.js";
+import { loginUser, registerUser, sendOTP, verifyOTP,getUserDetails, inviteFriend, getUsers, changeProfilePic, blockUser, unblockUser,resetPassword } from "../controllers/user.controller.js";
 import { verifyUser } from "../middlewares/auth.middleware.js";
 import multer from 'multer';
 import { storage } from "../config/cloudinary.config.js";
+import checkUserExistsMiddleware from "../middlewares/checkUserExists.middleware.js";
 
 const upload = multer({ storage: storage });
 
@@ -13,6 +14,10 @@ router.post("/register",registerUser);
 router.post("/verifyUser",sendOTP);
 router.post("/verifyOTP",verifyOTP);
 router.post("/login",loginUser);
+
+router.post("/forgotPassword",checkUserExistsMiddleware,sendOTP);
+
+router.post("/resetPassword",verifyUser,resetPassword);
 
 router.get("/profile",verifyUser,getUserDetails);
 

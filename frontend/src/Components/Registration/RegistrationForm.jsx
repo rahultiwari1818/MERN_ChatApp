@@ -25,29 +25,8 @@ export default function RegistrationForm() {
     });
   };
 
-  const handleOTPChange = (e, index) => {
-    const value = e.target.value;
-    if (/^\d*$/.test(value)) {
-      const updatedOTP = [...otp];
-      updatedOTP[index] = value;
-      setOTP(updatedOTP);
 
-      // Focus on the next input if a digit is entered
-      if (value && index < 5) {
-        document.getElementById(`otp-${index + 1}`).focus();
-      }
-    }
-  };
 
-  const handleOTPPaste = (e) => {
-    const pastedData = e.clipboardData.getData("text").trim();
-    if (/^\d{6}$/.test(pastedData)) {
-      setOTP(pastedData.split(""));
-      for (let i = 0; i < 6; i++) {
-        document.getElementById(`otp-${i}`).value = pastedData[i];
-      }
-    }
-  };
 
   const getOTP = async () => {
     try {

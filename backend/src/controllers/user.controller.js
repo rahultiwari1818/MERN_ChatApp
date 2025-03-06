@@ -344,3 +344,39 @@ export const unblockUser = async (req, res) => {
     }
 };
 
+export const resetPassword = async(req,res)=>{
+    try {
+        const {email} = req.user;
+        if(!email){
+            return res.status(400).json({
+                message:"Email is Required",
+                result:false 
+            })
+        }
+        const {newPassword} = req.body;
+        if(!newPassword?.trim()){
+            return res.status(400).json({
+                message:"New Password is Required",
+                result:false 
+            })
+        }
+
+        const hashedPasswd = await generateHashPassword(newPassword.trim());
+        
+        await User.updateOne({email:email},{
+            $set: {
+                password: hashedPasswd
+            }
+        },)
+
+        return res.status(201).json({
+            message: "Password Changed Successfully!",
+            result: true
+        })
+
+
+    } catch (error) {
+        console.error("Error Resetting Password user:", error);
+        return res.status(500).json({ message: "An error occurred.", error });
+    }
+}
