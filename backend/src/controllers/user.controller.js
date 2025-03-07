@@ -209,6 +209,25 @@ export const inviteFriend = async (req, res) => {
         const userName = req.user.name;
         const { friendMail } = req.body;
 
+
+        if(req.user.email == friendMail){
+            return res.status(400).json({
+                message:"You Can Not Invite Yourself.!",
+                result:false
+            })
+        }
+
+        const doesUserAlreadyExists = await User.findOne({email:friendMail});
+
+        if(doesUserAlreadyExists){
+            return res.status(400).json({
+                message:"User With This Email Id Already Exists.!",
+                result:false
+            })
+        }
+        
+        
+
         const mailBody = createHTMLBody(` <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
             <h2>Hi there!</h2>
             <p>

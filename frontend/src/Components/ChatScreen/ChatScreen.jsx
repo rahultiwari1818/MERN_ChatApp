@@ -5,15 +5,30 @@ import SendButtonImage from "../../Assets/Images/SendButton.png";
 import axios from 'axios';
 import { useChat } from '../../Contexts/ChatProvider';
 import RecipientInfo from '../RecipientInfo/RecipientInfo';
+import { ReactComponent as CameraIcon } from "../../Assets/SVGs/CameraIcon.svg";
 
 
 export default function ChatScreen({ changeTextBoxCss }) {
     const [messageToBeSent, setMessageToBeSent] = useState("");
     const [messages, setMessages] = useState([]);
     const messageBoxRef = useRef(null);
-    const { newMessage, recipient,messageStatus } = useChat();
+    const { newMessage, recipient, messageStatus } = useChat();
 
-    
+
+
+    const fileInputRef = useRef(null);
+    const [selectedFiles, setSelectedFiles] = useState([]);
+
+    const handleFileUpload = (event) => {
+        const files = Array.from(event.target.files);
+        if (files.length > 0) {
+            setSelectedFiles((prev) => [...prev, ...files]);
+        }
+    };
+
+    const removeFile = (index) => {
+        setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    };
 
     const getMessages = async () => {
         try {
@@ -39,14 +54,14 @@ export default function ChatScreen({ changeTextBoxCss }) {
         setMessages((old) => [...old, newMessage]);
     }, [newMessage])
 
-    useEffect(()=>{
-        setMessages(()=>{
-            const mappedMessages = messages?.map((message)=>{
-                console.log("catched : ",message._id,messageStatus)
-                if(message?._id === message?._id){
+    useEffect(() => {
+        setMessages(() => {
+            const mappedMessages = messages?.map((message) => {
+                console.log("catched : ", message._id, messageStatus)
+                if (message?._id === message?._id) {
                     return {
                         ...message,
-                        isRead:true
+                        isRead: true
                     }
                 }
                 else return message;
@@ -54,12 +69,12 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
             return mappedMessages;
         })
-    },[messageStatus]);
+    }, [messageStatus]);
 
 
     // const markAsRead = async() =>{
     //     if(!recipient) return;
-        
+
     //     // const {data} = await axios.patch(`${process.env.REACT_APP_API_URL}/api/v1/messages/markAsRead/${recipient?._id}`)
     //     io
 
@@ -81,7 +96,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                 message: messageToBeSent,
                 recipient: recipient._id,
             };
-            const {data} =  await axios.post(
+            const { data } = await axios.post(
                 `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`,
                 dataToBeSent,
                 {
@@ -90,7 +105,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                     },
                 }
             );
-            setMessages((old) => [...old,  {...data.data, isSender: true} ]);
+            setMessages((old) => [...old, { ...data.data, isSender: true }]);
             setMessageToBeSent("");
         } catch (error) {
             console.log(error);
@@ -165,17 +180,80 @@ export default function ChatScreen({ changeTextBoxCss }) {
                             </Typography>
                         </section>
                         :
-                        <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white  ${changeTextBoxCss}`}>
+                        <section className={`fixed bottom-0 right-0 flex items-center justify-center bg-white ${changeTextBoxCss}`}>
+                            {/* Hidden File Input */}
+                            {selectedFiles.length > 0 && (
+                                <div className="  p-2 absolute bottom-14 left-0 bg-white min-w-fit">
+                                    <div className='overflow-x-scroll py-2 flex gap-2 justify-start items-center'>
+
+                                        {selectedFiles.map((file, index) => {
+                                            const fileURL = URL.createObjectURL(file);
+                                            return file.type.startsWith("image/") ? (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={fileURL}
+                                                        alt="preview"
+                                                        className="w-16 h-16 rounded-md object-cover"
+                                                    />
+                                                    <button
+                                                        className="absolute top-0 right-0 bg-red-500 text-white text-xs p-1 rounded-full"
+                                                        onClick={() => removeFile(index)}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div key={index} className="relative">
+                                                    <video
+                                                        src={fileURL}
+                                                        className="w-16 h-16 rounded-md object-cover"
+                                                        controls
+                                                    />
+                                                    <button
+                                                        className="absolute top-0 right-0 bg-red-500 text-white text-xs p-1 rounded-full"
+                                                        onClick={() => removeFile(index)}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                            <input
+                                type="file"
+                                accept="image/*, video/*"
+                                multiple
+                                ref={fileInputRef}
+                                style={{ display: "none" }}
+                                onChange={handleFileUpload}
+                            />
+
+                            {/* Camera Icon (Triggers File Input) */}
+                            <CameraIcon
+                                className="outline outline-blue-400 p-2 mx-2 rounded cursor-pointer"
+                                onClick={() => fileInputRef.current.click()}
+                            />
+
+                            {/* Preview Section */}
+
+
                             <textarea
                                 rows={1}
                                 value={messageToBeSent}
                                 onChange={(e) => setMessageToBeSent(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault();
+                                        sendMessage();
+                                    }
+                                }}
                                 placeholder="Your Message"
                                 className="flex-1 resize-none overflow-auto p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                style={{
-                                    maxHeight: '150px', // Limit height if the text grows too much
-                                }}
+                                style={{ maxHeight: '150px' }}
                             />
+
                             <Button
                                 className="rounded-md bg-blue-300 text-white"
                                 disabled={messageToBeSent.trim().length === 0 || !recipient}
@@ -184,6 +262,8 @@ export default function ChatScreen({ changeTextBoxCss }) {
                                 <img src={SendButtonImage} alt="send button" className="h-12 w-12" />
                             </Button>
                         </section>
+
+
             }
         </section>
     );

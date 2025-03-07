@@ -50,7 +50,11 @@ export default function Profile() {
 
     } catch (error) {
       console.log(error);
-      toast.error(error?.response?.data?.error?.message)
+      if(error?.response.status === 400){
+        toast.error(error?.response?.data?.message);
+        setFriendEmail("");
+      }
+
     }
   }
 
