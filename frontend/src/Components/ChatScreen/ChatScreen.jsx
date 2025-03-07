@@ -96,7 +96,8 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
     const sendMessage = async () => {
         try {
-            if (!recipient || messageToBeSent.trim().length() == 0) return;
+
+            if (!recipient || messageToBeSent.trim().length == 0) return;
             const dataToBeSent = {
                 message: messageToBeSent,
                 recipient: recipient._id,
