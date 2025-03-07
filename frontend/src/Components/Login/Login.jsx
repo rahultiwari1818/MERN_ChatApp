@@ -57,7 +57,7 @@ export default function Login() {
                 &&
                 <Overlay />
             }
-            <Container maxWidth="xs" className='my-3'>
+            <Container maxWidth="xs" className='my-3 min-h-fit' >
 
                 <Box
                     component="form"
@@ -105,14 +105,14 @@ export default function Login() {
                     >
                         Login
                     </Button>
-
+                    <button
+                    type='button'
+                        className='my-3 px-5 py-3 bg-red-500 text-white hover:text-red-500 hover:bg-white hover:outline hover:outline-red-500 rounded'
+                        onClick={()=>setOpenForgotPasswordModal(true)}
+                    >
+                        Forgot Password
+                    </button>
                 </Box>
-                <button
-                    className='my-3 px-5 py-3 bg-red-500 text-white hover:text-red-500 hover:bg-white hover:outline hover:outline-red-500 rounded'
-                    onClick={()=>setOpenForgotPasswordModal(true)}
-                >
-                    Forgot Password
-                </button>
             </Container>
             <ForgotPasswordModal open={openForgotPasswordModal} close={closeForgotPasswordModal}/>
         </>
