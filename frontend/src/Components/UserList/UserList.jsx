@@ -5,36 +5,18 @@ import {
   Typography,
 } from '@mui/material';
 import User from '../User/User';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../Utils/utils';
 import { useChat } from '../../Contexts/ChatProvider';
 
 export default function UserList({ handleClick }) {
   // const [users, setUsers] = useState([]);
-  const navigate = useNavigate();
   const [searchEmail, setSearchEmail] = useState('');
 
-  const {users,getUsers} = useChat();
+  const {users,getUsers,isUsersLoading} = useChat();
 
   const {changeRecipient,newMessage,recipient} = useChat();
 
-  // const getUsers = async (email) => {
-  //   try {
-  //     const { data } = await axios.get(
-  //       `${process.env.REACT_APP_API_URL}/api/v1/users/getUsers?friendMail=${email}`,
-  //       {
-  //         headers: {
-  //           Authorization: localStorage.getItem('token'),
-  //         },
-  //       }
-  //     );
-  //     setUsers(data.data.length === 0 ? [] : data.data);
-  //   } catch (error) {
-  //     console.log(error?.response);
-  //     if (error?.response?.status === 400) navigate('/');
-  //   }
-  // };
+ 
 
   // Debounced function
   const debouncedGetUsers = useCallback(
@@ -101,9 +83,18 @@ export default function UserList({ handleClick }) {
         className="bg-white outline outline-white"
       />
       <List>
-        {usersToMap?.map((user) => (
-          <User user={user} handleClick={handleClick} key={user._id} />
-        ))}
+        {
+          isUsersLoading
+          ?
+          [1,2,3,4,5,6,7,8,9,10,11,12,13]?.map((user) => (
+            <User isSkeleton={true} key={user} />
+          ))
+          :
+          usersToMap?.map((user) => (
+            <User user={user} handleClick={handleClick} key={user._id} isSkeleton={false} />
+          ))
+        }
+
       </List>
     </section>
   );

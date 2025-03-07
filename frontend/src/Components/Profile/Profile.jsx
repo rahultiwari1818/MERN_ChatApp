@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Avatar, Typography, TextField, } from '@mui/material';
+import { Avatar, Typography, TextField, Skeleton, } from '@mui/material';
 import axios from 'axios';
 import ProfileIcon from "../../Assets/SVGs/Profile.svg";
 import { ReactComponent as CameraIcon } from "../../Assets/SVGs/CameraIcon.svg";
+import { ReactComponent as BackIcon } from "../../Assets/SVGs/BackIcon.svg";
 import { toast } from "react-toastify";
 import ProfileDialog from '../ProfileDialog/ProfileDialog';
+import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
   const [userData, setUserData] = useState({});
@@ -12,9 +14,11 @@ export default function Profile() {
   const [updatedData, setUpdatedData] = useState({ name: '', email: '' });
   const [friendEmail, setFriendEmail] = useState("");
   const [openUpdateProfileDialog, setOpenUpdateProfileDialog] = useState(false);
-
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const navigate = useNavigate();
   const fetchProfileData = async () => {
     try {
+      setIsDataLoading(true);
       const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/v1/users/profile`, {
         headers: {
           Authorization: localStorage.getItem("token"),
@@ -24,6 +28,9 @@ export default function Profile() {
       setUpdatedData({ name: data.data.name, email: data.data.email });
     } catch (err) {
       // setError('Failed to fetch profile data');
+    }
+    finally {
+      setIsDataLoading(false);
     }
   };
 
@@ -50,7 +57,7 @@ export default function Profile() {
 
     } catch (error) {
       console.log(error);
-      if(error?.response.status === 400){
+      if (error?.response.status === 400) {
         toast.error(error?.response?.data?.message);
         setFriendEmail("");
       }
@@ -85,6 +92,11 @@ export default function Profile() {
 
   return (
     <>
+      <BackIcon className="h-10 w-10 bg-blue-300 p-3 absolute top-28 left-10 rounded-full cursor-pointer"  onClick={
+        ()=>{
+          navigate("/chat");
+        }
+      }/>
       <section className="rounded-lg shadow-lg bg-white m-5 p-5 flex flex-col md:flex-row justify-center items-center gap-10">
         <section className="flex flex-col items-center gap-4 relative">
           <Avatar
@@ -107,27 +119,53 @@ export default function Profile() {
             User Profile
           </Typography>
 
-          <TextField
-            fullWidth
-            name="name"
-            label="Name"
-            variant="outlined"
-            margin="normal"
-            disabled={true}
-            value={updatedData.name}
-            onChange={handleInputChange}
-          />
+          {
+            isDataLoading
+              ?
+              <>
+                <Typography variant='h5'>
+                  Name :
 
-          <TextField
-            fullWidth
-            name="email"
-            label="Email"
-            variant="outlined"
-            margin="normal"
-            disabled={true}
-            value={updatedData.email}
-            onChange={handleInputChange}
-          />
+                </Typography>
+                <Typography variant="h6" color="#ffffff" >
+
+                  <Skeleton variant="text" width={200} height={20} />
+                </Typography>
+                <Typography variant='h5'>
+                  Email :
+
+                </Typography>
+                <Typography variant="h6" color="#ffffff" >
+                  <Skeleton variant="text" width={200} height={20} />
+                </Typography>
+              </>
+              :
+              <>
+                <TextField
+                  fullWidth
+                  name="name"
+                  label="Name"
+                  variant="outlined"
+                  margin="normal"
+                  disabled={true}
+                  value={updatedData.name}
+                  onChange={handleInputChange}
+                />
+
+                <TextField
+                  fullWidth
+                  name="email"
+                  label="Email"
+                  variant="outlined"
+                  margin="normal"
+                  disabled={true}
+                  value={updatedData.email}
+                  onChange={handleInputChange}
+                />
+
+              </>
+          }
+
 
           {/* {editable && (
             <Button
@@ -165,30 +203,55 @@ export default function Profile() {
             <Typography variant="h5" color="initial">Blocked Users</Typography>
             <section className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'>
               {
-                userData?.blockedUsers?.map((user) => {
-                  return <section className='w-full px-3 py-2 flex justify-between  cursor-pointer bg-blue-300'
-                    title={`Click Here to get More Info About ${user.name}`}
-                  >
-                    <section className='px-3'>
-                      <Avatar
-                        src={(user?.profilePic || ProfileIcon)}
-                        alt="Preview"
-                        sx={{
-                          width: 50, height: 50, outline: "2px solid #ffffff",
-                          outlineOffset: "2px",background:"#ffffff"
-                        }}
-                      />
-                    </section>
-                    <section>
+                isDataLoading
+                  ?
+                  [1, 2, 3, 4, 5, 6]?.map((user) => {
+                    return <section className='w-full px-3 py-2 flex justify-between  cursor-pointer bg-blue-300'
+                      title={`Click Here to get More Info About ${user.name}`}
+                    >
+                      <section className='px-3'>
+                        <Avatar
+                          src={(ProfileIcon)}
+                          alt="Preview"
+                          sx={{
+                            width: 50, height: 50, outline: "2px solid #ffffff",
+                            outlineOffset: "2px", background: "#ffffff"
+                          }}
+                        />
+                      </section>
+                      <section>
 
-                      <Typography variant="h6" color="#ffffff" >
-                        {
-                          user.name
-                        }
-                      </Typography>
+                        <Typography variant="h6" color="#ffffff" >
+                          <Skeleton variant="text" width={200} height={20} />
+                        </Typography>
+                      </section>
                     </section>
-                  </section>
-                })
+                  })
+                  :
+                  userData?.blockedUsers?.map((user) => {
+                    return <section className='w-full px-3 py-2 flex justify-between  cursor-pointer bg-blue-300'
+                      title={`Click Here to get More Info About ${user.name}`}
+                    >
+                      <section className='px-3'>
+                        <Avatar
+                          src={(user?.profilePic || ProfileIcon)}
+                          alt="Preview"
+                          sx={{
+                            width: 50, height: 50, outline: "2px solid #ffffff",
+                            outlineOffset: "2px", background: "#ffffff"
+                          }}
+                        />
+                      </section>
+                      <section>
+
+                        <Typography variant="h6" color="#ffffff" >
+                          {
+                            user.name
+                          }
+                        </Typography>
+                      </section>
+                    </section>
+                  })
               }
             </section>
           </section>

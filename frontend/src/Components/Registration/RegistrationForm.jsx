@@ -91,7 +91,7 @@ export default function RegistrationForm() {
       showOverlay && 
       <Overlay/>
     }
-    <Container maxWidth="xs">
+    <Container maxWidth="xs" className="mb-10">
       <Box
         component="form"
         onSubmit={handleSubmission}

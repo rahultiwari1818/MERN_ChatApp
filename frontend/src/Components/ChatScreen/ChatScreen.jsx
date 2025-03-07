@@ -14,7 +14,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
     const messageBoxRef = useRef(null);
     const { newMessage, recipient, messageStatus } = useChat();
 
-
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
     const fileInputRef = useRef(null);
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -33,6 +33,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
     const getMessages = async () => {
         try {
             if (!recipient) return;
+            setIsLoadingMessages(true);
             const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/v1/messages/getAllMessages/${recipient?._id}`, {
                 headers: {
                     Authorization: localStorage.getItem("token"),
@@ -41,6 +42,9 @@ export default function ChatScreen({ changeTextBoxCss }) {
             setMessages(() => data.data);
         } catch (error) {
             console.log(error);
+        }
+        finally {
+            setIsLoadingMessages(false);
         }
     };
 
@@ -92,6 +96,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
     const sendMessage = async () => {
         try {
+            if (!recipient || messageToBeSent.trim().length() == 0) return;
             const dataToBeSent = {
                 message: messageToBeSent,
                 recipient: recipient._id,
@@ -130,39 +135,56 @@ export default function ChatScreen({ changeTextBoxCss }) {
                 className={`mb-3 overflow-y-scroll ${recipient ? "h-[90%]" : "h-full"} `}
                 ref={messageBoxRef} // Place the ref here on the scrollable section
             >
-                {recipient ? (
-                    <>
-                        {messages.length === 0 ? (
-                            <Typography
-                                className="flex justify-center items-center font-bold bottom-72 fixed"
-                                variant="h3"
-                            >
-                                Start Your Conversation
-                            </Typography>
+                {recipient ?
+
+                    isLoadingMessages
+                        ?
+                        <>
+                            {
+                                [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].map((message) => (
+                                    <Message
+                                        key={message}
+                                        isSkeleton = {true}
+                                        isSender={message % 2 == 0}
+                                    />
+                                ))
+                            }
+                        </>
+                        :
+
+                        (
+                            <>
+                                {messages.length === 0 ? (
+                                    <Typography
+                                        className="flex justify-center items-center font-bold bottom-72 fixed"
+                                        variant="h3"
+                                    >
+                                        Start Your Conversation
+                                    </Typography>
+                                ) : (
+                                    messages.map((message) => (
+                                        <Message
+                                            message={message.message}
+                                            time={message.timestamp}
+                                            isSender={message.isSender}
+                                            key={message._id || message.timestamp}
+                                            messageId={message._id}
+                                            isSent={message?.isSent}
+                                            isReceived={message?.isReceived}
+                                            isRead={message?.isRead}
+                                            onDeletingMessage={onDeletingMessage}
+                                        />
+                                    ))
+                                )}
+                            </>
                         ) : (
-                            messages.map((message) => (
-                                <Message
-                                    message={message.message}
-                                    time={message.timestamp}
-                                    isSender={message.isSender}
-                                    key={message._id || message.timestamp}
-                                    messageId={message._id}
-                                    isSent={message?.isSent}
-                                    isReceived={message?.isReceived}
-                                    isRead={message?.isRead}
-                                    onDeletingMessage={onDeletingMessage}
-                                />
-                            ))
-                        )}
-                    </>
-                ) : (
-                    <Typography
-                        className="flex justify-center items-center font-bold bottom-72 fixed"
-                        variant="h3"
-                    >
-                        Select a Chat to Start Your Conversation
-                    </Typography>
-                )}
+                        <Typography
+                            className="flex justify-center items-center font-bold bottom-72 fixed"
+                            variant="h3"
+                        >
+                            Select a Chat to Start Your Conversation
+                        </Typography>
+                    )}
             </Box>
             {
                 recipient?.hasBlocked ?
@@ -228,6 +250,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
                                 ref={fileInputRef}
                                 style={{ display: "none" }}
                                 onChange={handleFileUpload}
+                                disabled={!recipient}
                             />
 
                             {/* Camera Icon (Triggers File Input) */}

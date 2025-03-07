@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Container, Typography, Box, DialogActions, Button } from '@mui/material';
+import { Container, Typography, Box, DialogActions, Button, Skeleton } from '@mui/material';
 import { toast } from "react-toastify";
 import DialogComp from '../Common/Dialog';
 import axios from 'axios';
@@ -9,8 +9,7 @@ import DoubleTick from "../../Assets/Images/DoubleTick.png";
 import SingleTick from "../../Assets/Images/SingleTick.png";
 import NotSentIcon from "../../Assets/Images/NotSentIcon.png";
 
-export default function Message({ message, time, isSender, messageId, onDeletingMessage,isSent,isReceived,isRead }) {
-
+export default function Message({ message, time, isSender, messageId, onDeletingMessage, isSent, isReceived, isRead, isSkeleton }) {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const deleteHandler = useCallback(async () => {
@@ -20,13 +19,11 @@ export default function Message({ message, time, isSender, messageId, onDeleting
         return;
       }
 
-
-      // Make the DELETE API call
       const response = await axios.delete(
         `${process.env.REACT_APP_API_URL}/api/v1/messages/${messageId}`,
         {
           headers: {
-            Authorization: localStorage.getItem("token"), // Include the token for authentication
+            Authorization: localStorage.getItem("token"),
           },
         }
       );
@@ -39,23 +36,26 @@ export default function Message({ message, time, isSender, messageId, onDeleting
       }
     } catch (error) {
       console.error("Error while deleting the message:", error);
-      toast.error(
-        error.response?.data?.message || "An error occurred while deleting the message."
-      );
-    }
-    finally {
+      toast.error(error.response?.data?.message || "An error occurred while deleting the message.");
+    } finally {
       closeDialog();
     }
   }, []);
-
-
-
 
   const closeDialog = useCallback(() => {
     setOpenDeleteDialog(false);
   }, []);
 
-
+  if (isSkeleton) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: isSender ? 'flex-end' : 'flex-start', padding: '8px 0' }}>
+        <Box sx={{ maxWidth: '70%', padding: '10px 15px', borderRadius: '12px', backgroundColor: '#f0f0f0' }}>
+          <Skeleton variant="text" width={200} height={20} />
+          <Skeleton variant="text" width={100} height={15} />
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <>
@@ -66,8 +66,6 @@ export default function Message({ message, time, isSender, messageId, onDeleting
           padding: '8px 0',
         }}
         className='cursor-pointer'
-        
-
       >
         <Box
           sx={{
@@ -79,11 +77,11 @@ export default function Message({ message, time, isSender, messageId, onDeleting
             wordBreak: 'break-word',
           }}
           onClick={() => {
-            if(!isSender) return;
+            if (!isSender) return;
             setOpenDeleteDialog(true);
           }}
         >
-          <Typography  className='text-wrap text-xs md:text-sm lg:text-base'>{message}</Typography>
+          <Typography className='text-wrap text-xs md:text-sm lg:text-base'>{message}</Typography>
           <section className="flex justify-between items-center gap-2">
             <Typography
               variant="caption"
@@ -97,29 +95,12 @@ export default function Message({ message, time, isSender, messageId, onDeleting
             >
               {formatDate(time)}
             </Typography>
-            {
-              isSender ?
-              (
-              
-              isRead
-              ?
-              
-              <img src={ReadTick} alt="read" srcset="" className='h-5 w-5'/>
-              
-              :
-              isReceived
-              ?
-              <img src={DoubleTick} alt="received" srcset="" className='h-5 w-5'/>
-              :
-              isSent
-              ?
-              <img src={SingleTick} alt="sent" srcset="" className='h-5 w-5'/>
-              :
-              <img src={NotSentIcon} alt="not sent" srcset="" className='h-5 w-5 '/>
-              )
-              :
-              <></>
-            }
+            {isSender && (
+              isRead ? <img src={ReadTick} alt="read" className='h-5 w-5' /> :
+              isReceived ? <img src={DoubleTick} alt="received" className='h-5 w-5' /> :
+              isSent ? <img src={SingleTick} alt="sent" className='h-5 w-5' /> :
+              <img src={NotSentIcon} alt="not sent" className='h-5 w-5' />
+            )}
           </section>
         </Box>
       </Container>
@@ -128,16 +109,11 @@ export default function Message({ message, time, isSender, messageId, onDeleting
   );
 }
 
-
-// --------------------------------------- Dialog Box For Deleting ----------------------------------------
-
-
 function DeletionDialogBox({ open, handleClose, deleteHandler }) {
   return (
     <DialogComp open={open} handleClose={handleClose} dialogTitle="Delete This Message">
       <Typography variant="h6" className='text-red-500'>
-        This Can Be Reverted Back.
-        Are you Sure ?
+        This Can Be Reverted Back. Are you Sure ?
       </Typography>
       <DialogActions>
         <Button
@@ -152,9 +128,9 @@ function DeletionDialogBox({ open, handleClose, deleteHandler }) {
             border: '2px solid transparent',
             transition: 'all 0.3s ease-in-out',
             '&:hover': {
-                backgroundColor: 'white',
-                color: 'red',
-                border: '2px solid red',
+              backgroundColor: 'white',
+              color: 'red',
+              border: '2px solid red',
             },
           }}
         >
@@ -162,5 +138,5 @@ function DeletionDialogBox({ open, handleClose, deleteHandler }) {
         </Button>
       </DialogActions>
     </DialogComp>
-  )
+  );
 }

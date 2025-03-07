@@ -19,6 +19,7 @@ export default function ChatProvider({ children }) {
     const [recipient, setRecipient] = useState("");
 
     const [users, setUsers] = useState([]);
+    const [isUsersLoading,setIsUsersLoading] = useState(false);
     const [messageStatus,setMessageStatus] = useState("");
 
 
@@ -42,6 +43,7 @@ export default function ChatProvider({ children }) {
 
     const getUsers = async (email) => {
         try {
+            setIsUsersLoading(true);
             const { data } = await axios.get(
                 `${process.env.REACT_APP_API_URL}/api/v1/users/getUsers?friendMail=${email}`,
                 {
@@ -54,6 +56,9 @@ export default function ChatProvider({ children }) {
         } catch (error) {
             console.log(error?.response);
             //   if (error?.response?.status === 400) navigate('/');
+        }
+        finally{
+            setIsUsersLoading(false);
         }
     };
 
@@ -176,7 +181,7 @@ export default function ChatProvider({ children }) {
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus  }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading  }}>
             {children}
         </ChatContext.Provider>
     );
