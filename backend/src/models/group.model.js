@@ -10,7 +10,7 @@ const GroupSchema = new Schema(
     members: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-        role: { type: String, enum: ["member", "admin"], default: "member" }, // Role field to distinguish admin vs regular user
+        role: { type: String, enum: ["member", "admin"], default: "member" }, 
       },
     ],
     createdBy: {
