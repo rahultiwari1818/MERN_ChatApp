@@ -1,40 +1,36 @@
-import mongoose,{Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const MesssagesSchema = new Schema({
-    senderId:{
-        required:true,
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
+const MessagesSchema = new Schema({
+  senderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  recipientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  message: {
+    type: String,
+    required: true,
+  },
+  readReceipts: {
+    type: String,
+    enum: ["sent", "delivered", "read"],
+    default: "sent",
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+  deletedFor: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-    recipientId:{
-        required:true,
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
-    },
-    message:{
-        required:true,
-        type:String
-    },
-    isSent:{
-        type:Boolean,
-        default:false
-    },
-    isReceived:{
-        type:Boolean,
-        default:false
-    },
-    isRead:{
-        type:Boolean,
-        default:false
-    },
-    timestamp:{
-        required:true,
-        type:Date,
-        default:Date.now
-    },
+  ],
 });
 
-const Messages = mongoose.model("Messages",MesssagesSchema);
-
+const Messages = mongoose.model("Messages", MessagesSchema);
 export default Messages;
-
