@@ -15,8 +15,14 @@ const GroupMessagesSchema = new Schema(
     },
     message: {
       type: String,
-      required: true,
+      trim: true,
     },
+    media: [
+      {
+        url: { type: String, required: true },
+        type: { type: String, enum: ["image", "video", "audio", "file"], required: true },
+      },
+    ],
     readReceipts: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -34,6 +40,13 @@ const GroupMessagesSchema = new Schema(
   { timestamps: true }
 );
 
-const GroupMessages = mongoose.model("GroupMessages", GroupMessagesSchema);
+// Custom validation: Either message or media is required
+GroupMessagesSchema.pre("save", function (next) {
+  if (!this.message && (!this.media || this.media.length === 0)) {
+    return next(new Error("Either message or media is required"));
+  }
+  next();
+});
 
+const GroupMessages = mongoose.model("GroupMessages", GroupMessagesSchema);
 export default GroupMessages;

@@ -22,6 +22,10 @@ export default function ChatProvider({ children }) {
     const [isUsersLoading,setIsUsersLoading] = useState(false);
     const [messageStatus,setMessageStatus] = useState("");
 
+    const changeNewMessage = (mess)=>{
+        setNewMessage(mess);
+    }   
+
 
     const sortUser = (senderId, message) => {
         const updatedUserList = [...users]; // Clone the existing user list
@@ -41,11 +45,12 @@ export default function ChatProvider({ children }) {
         setUsers(updatedUserList);
     }
 
-    const getUsers = async (email) => {
+    const getUsers = async (email,showOtherUsers) => {
         try {
             setIsUsersLoading(true);
+            const url = `${process.env.REACT_APP_API_URL}/api/v1/users/${showOtherUsers ? 'getUsers' :"getConversations"}?friendMail=${email}`;
             const { data } = await axios.get(
-                `${process.env.REACT_APP_API_URL}/api/v1/users/getUsers?friendMail=${email}`,
+url,
                 {
                     headers: {
                         Authorization: localStorage.getItem('token'),
@@ -68,13 +73,24 @@ export default function ChatProvider({ children }) {
         setRecipient(() => recipient);
     };
 
-    const changeBlockingStatus = async (status) => {
-        setRecipient((old) => {
-            return {
-                ...old,
-                isBlocked: status
-            }
-        })
+    const changeBlockingStatus = async (status,isBlocked) => {
+        if(isBlocked){
+            setRecipient((old) => {
+                return {
+                    ...old,
+                    isBlocked: status
+                }
+            })
+        }
+        else{
+            setRecipient((old) => {
+                return {
+                    ...old,
+                    hasBlocked: status
+                }
+            })
+        }
+        
     }
 
     const newMessageHandler = async (newMessage) => {
@@ -112,7 +128,7 @@ export default function ChatProvider({ children }) {
 
     const unblockUserHandler = async ({ _id }) => {
         if (recipient?._id === _id) {
-            changeBlockingStatus(false);
+            changeBlockingStatus(false,false);
         }
     }
 
@@ -181,7 +197,7 @@ export default function ChatProvider({ children }) {
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading  }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading, changeNewMessage }}>
             {children}
         </ChatContext.Provider>
     );

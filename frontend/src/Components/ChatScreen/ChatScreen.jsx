@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Typography } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Message from '../Message/Message';
 import SendButtonImage from "../../Assets/Images/SendButton.png";
@@ -12,7 +12,11 @@ export default function ChatScreen({ changeTextBoxCss }) {
     const [messageToBeSent, setMessageToBeSent] = useState("");
     const [messages, setMessages] = useState([]);
     const messageBoxRef = useRef(null);
-    const { newMessage, recipient, messageStatus } = useChat();
+    const { newMessage, recipient, messageStatus,changeNewMessage } = useChat();
+
+    const clearChatMessages = useCallback(()=>{
+        setMessages([]);
+    },[])
 
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
@@ -21,6 +25,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
     const handleFileUpload = (event) => {
         const files = Array.from(event.target.files);
+        if(files.length > 10) return;
         if (files.length > 0) {
             setSelectedFiles((prev) => [...prev, ...files]);
         }
@@ -55,34 +60,11 @@ export default function ChatScreen({ changeTextBoxCss }) {
     }
 
     useEffect(() => {
+        if(newMessage?.isSender) return;
         setMessages((old) => [...old, newMessage]);
     }, [newMessage])
 
-    useEffect(() => {
-        setMessages(() => {
-            const mappedMessages = messages?.map((message) => {
-                console.log("catched : ", message._id, messageStatus)
-                if (message?._id === message?._id) {
-                    return {
-                        ...message,
-                        isRead: true
-                    }
-                }
-                else return message;
-            });
-
-            return mappedMessages;
-        })
-    }, [messageStatus]);
-
-
-    // const markAsRead = async() =>{
-    //     if(!recipient) return;
-
-    //     // const {data} = await axios.patch(`${process.env.REACT_APP_API_URL}/api/v1/messages/markAsRead/${recipient?._id}`)
-    //     io
-
-    // }
+    
 
     useEffect(() => {
         // markAsRead();
@@ -96,28 +78,62 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
     const sendMessage = async () => {
         try {
-
-            if (!recipient || messageToBeSent.trim().length == 0) return;
-            const dataToBeSent = {
-                message: messageToBeSent,
-                recipient: recipient._id,
-            };
-            const { data } = await axios.post(
-                `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`,
-                dataToBeSent,
-                {
-                    headers: {
-                        Authorization: localStorage.getItem("token"),
-                    },
-                }
-            );
-            setMessages((old) => [...old, { ...data.data, isSender: true }]);
-            setMessageToBeSent("");
+          if (!recipient || (messageToBeSent.trim().length === 0 && selectedFiles.length === 0)) return;
+      
+          const formData = new FormData();
+          for (let file of selectedFiles) {
+            formData.append(`media`, file);
+          }
+          formData.append("message", messageToBeSent);
+          formData.append("recipient", recipient._id);
+      
+          // Create a temporary message and add it to state
+          const tempMessage = {
+            message: messageToBeSent,
+            media: selectedFiles,
+            senderId: "",  // You might want to update this with the sender's ID
+            recipient: recipient._id,
+            readReceipts: "not sent",
+            timestamp: Date.now(),
+            isSender: true,
+          };
+      
+          setMessages((old) => [...old, tempMessage]);
+      
+          // Make the API call to send the message
+          const { data } = await axios.post(
+            `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`,
+            formData,
+            {
+              headers: {
+                Authorization: localStorage.getItem("token"),
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+      
+          // Once the API call is successful, replace the temporary message
+          setMessages((old) => {
+            // Find the temporary message by its timestamp or any unique property
+            const updatedMessages = old.filter((msg) => msg.timestamp !== tempMessage.timestamp);
+      
+            // Add the new message data from the API response
+            return [
+              ...updatedMessages,
+              { ...data.data, isSender: true },
+            ];
+          });
+      
+          // Clear the message input and selected files
+          setMessageToBeSent("");
+          setSelectedFiles([]);
+          changeNewMessage({...data.data})
+      
         } catch (error) {
-            console.log(error);
+          console.log(error);
         }
-    };
-
+      };
+      
     const onDeletingMessage = useCallback((messageId) => {
         setMessages((old) => {
             return old.filter((oldMessage) => oldMessage._id !== messageId);
@@ -130,7 +146,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
             {
                 recipient
                 &&
-                <RecipientInfo />
+                <RecipientInfo clearChatMessagesHandler={clearChatMessages}/>
             }
             <Box
                 className={`mb-3 overflow-y-scroll ${recipient ? "h-[90%]" : "h-full"} `}
@@ -170,10 +186,10 @@ export default function ChatScreen({ changeTextBoxCss }) {
                                             isSender={message.isSender}
                                             key={message._id || message.timestamp}
                                             messageId={message._id}
-                                            isSent={message?.isSent}
-                                            isReceived={message?.isReceived}
-                                            isRead={message?.isRead}
+                                            readReceipts={message?.readReceipts}
                                             onDeletingMessage={onDeletingMessage}
+                                            media={message?.media}
+
                                         />
                                     ))
                                 )}
@@ -280,7 +296,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
                             <Button
                                 className="rounded-md bg-blue-300 text-white"
-                                disabled={messageToBeSent.trim().length === 0 || !recipient}
+                                disabled={(selectedFiles.length === 0 &&  messageToBeSent.trim().length === 0) || !recipient}
                                 onClick={sendMessage}
                             >
                                 <img src={SendButtonImage} alt="send button" className="h-12 w-12" />

@@ -13,8 +13,14 @@ const MessagesSchema = new Schema({
   },
   message: {
     type: String,
-    required: true,
+    trim: true,
   },
+  media: [
+    {
+      url: { type: String, required: true },
+      type: { type: String, required: true },
+    },
+  ],
   readReceipts: {
     type: String,
     enum: ["sent", "delivered", "read"],
@@ -23,6 +29,7 @@ const MessagesSchema = new Schema({
   timestamp: {
     type: Date,
     default: Date.now,
+    index: true,
   },
   deletedFor: [
     {
@@ -30,6 +37,14 @@ const MessagesSchema = new Schema({
       ref: "User",
     },
   ],
+});
+
+// Custom validation: Either message or media is required
+MessagesSchema.pre("save", function (next) {
+  if (!this.message && (!this.media || this.media.length === 0)) {
+    return next(new Error("Either message or media is required"));
+  }
+  next();
 });
 
 const Messages = mongoose.model("Messages", MessagesSchema);

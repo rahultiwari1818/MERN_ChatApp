@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { createHTMLBody } from "../utils/utils.js";
+
 const mailTransport = nodemailer.createTransport({
     service: "Gmail",
     auth: {

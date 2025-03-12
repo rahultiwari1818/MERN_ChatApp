@@ -61,8 +61,7 @@ export function createHTMLBody(body) {
                     ${body}
                 </div>
                 <div class="footer">
-                    <p>© ${new Date().getFullYear()} Your Company. All rights reserved.</p>
-                    <p><a href="#">Unsubscribe</a></p>
+                    <p>© ${new Date().getFullYear()} Vartalaap. All rights reserved.</p>
                 </div>
             </div>
         </body>
