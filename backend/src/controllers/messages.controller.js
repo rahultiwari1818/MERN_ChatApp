@@ -1,7 +1,7 @@
 import { uploadToCloudinary } from "../config/cloudinary.config.js";
 import Conversation from "../models/conversation.model.js";
 import Messages from "../models/messages.models.js";
-import { getReceiverSocketId, io, saveOfflineMessage } from "../socket/app.socket.js";
+import { getReceiverSocketId, io, isUserOnline, saveOfflineMessage } from "../socket/app.socket.js";
 
 export const getMessages = async (req, res) => {
     try {
@@ -116,6 +116,7 @@ export const sendMessage = async (req, res) => {
             recipientId: recipient,
             message,
             media:mediaURLs,
+            readReceipts : isUserOnline(recipient) ? "delivered" : "sent"
         });
 
         conversation.messages.push(newMessage._id);
@@ -247,3 +248,32 @@ export const clearChat = async(req,res)=>{
         })
     }
 }
+
+export const markAsRead = async (messageId) => {
+    try {
+  
+      if (!messageId) {
+        return res.status(400).json({ error: "Message ID is required" });
+      }
+  
+      const updatedMessage = await Messages.findByIdAndUpdate(
+        messageId,
+        { readReceipts: "read" },
+        { new: true }
+      );
+  
+      if (!updatedMessage) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+  
+    //   return res.status(200).json({
+    //     message: "Message marked as read",
+    //     result: true,
+    //     data: updatedMessage,
+    //   });
+    } catch (error) {
+      console.error("Error in markAsRead:", error);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  };
+  

@@ -8,7 +8,6 @@ import {
   verifyPassword,
 } from "../utils/utils.js";
 import User from "../models/users.models.js";
-import Messages from "../models/messages.models.js";
 import { getReceiverSocketId, io, isUserOnline } from "../socket/app.socket.js";
 import { uploadToCloudinary } from "../config/cloudinary.config.js";
 import Conversation from "../models/conversation.model.js";
@@ -153,18 +152,16 @@ export const getConversations = async (req, res) => {
     const userId = req.user._id;
 
     // Fetch private conversations
-    const {friendMail} = req.query;
-
+    const { friendMail } = req.query;
 
     let userQuery = {
-        participants: { $in: [userId] },
-      };
-  
+      participants: { $in: [userId] },
+    };
+
     // If friendMail is provided, filter users by email (case-insensitive partial match)
     if (friendMail) {
       userQuery.email = { $regex: friendMail, $options: "i" };
     }
-
 
     const privateConversations = await Conversation.find(userQuery)
       .populate({
@@ -179,35 +176,34 @@ export const getConversations = async (req, res) => {
       .sort({ lastMessageTime: -1 })
       .lean();
 
-
     // Format private conversations
     const formattedPrivateConversations = privateConversations.map((conv) => {
       const otherParticipant = conv.participants.find(
         (p) => p._id.toString() !== userId
       );
-      const user = conv.participants.find(
-        (p) => p._id.toString() === userId
+      const user = conv.participants.find((p) => p._id.toString() === userId);
+
+      const isBlocked = user?.blockedUsers?.filter(
+        (user) => user.toString() === otherParticipant._id.toString()
       );
-
-
-
-      const isBlocked = user?.blockedUsers?.filter((user)=>user.toString() === otherParticipant._id.toString());
       const hasBlocked =
-        otherParticipant && otherParticipant.blockedUsers.filter((user)=> userId === user.toString());
+        otherParticipant &&
+        otherParticipant.blockedUsers.filter(
+          (user) => userId === user.toString()
+        );
 
       return {
-        _id : otherParticipant?._id,
+        _id: otherParticipant?._id,
         name: otherParticipant?.name || "Unknown",
         email: otherParticipant?.email || "",
         profilePic: otherParticipant?.profilePic || "",
         // messages: conv.messages || [],
         lastSeen: otherParticipant?.lastSeen,
-        lastMessage:
-          conv.lastMessage,
+        lastMessage: conv.lastMessage,
         lastMessageTime: conv.lastMessageTime,
-        isBlocked : isBlocked.length > 0 ,
-        hasBlocked : hasBlocked.length > 0,
-        isOnline : isUserOnline(otherParticipant?._id)
+        isBlocked: isBlocked.length > 0,
+        hasBlocked: hasBlocked.length > 0,
+        isOnline: isUserOnline(otherParticipant?._id),
       };
     });
 
@@ -234,7 +230,7 @@ export const getConversations = async (req, res) => {
         lastMessage?.message ||
         (lastMessage?.media?.length ? "Media Message" : "");
       group.lastMessageTime = lastMessage?.createdAt || group.updatedAt;
-    //   group.messages = groupMessages || [];
+      //   group.messages = groupMessages || [];
     }
 
     // Format group conversations
@@ -250,7 +246,7 @@ export const getConversations = async (req, res) => {
         role: member.role,
         lastSeen: member.lastSeen,
       })),
-    //   messages: group.messages || [],
+      //   messages: group.messages || [],
       lastMessage: group.lastMessage,
       lastMessageTime: group.lastMessageTime,
     }));
@@ -276,51 +272,49 @@ export const getConversations = async (req, res) => {
 };
 
 export const getUsers = async (req, res) => {
-    try {
-      const userId = req.user._id;
-      const { friendMail } = req.query;
-  
-      // Construct query to find users excluding the current user
-      let userQuery = { _id: { $ne: userId } };
-  
-      // If friendMail is provided, filter users by email (case-insensitive partial match)
-      if (friendMail) {
-        userQuery.email = { $regex: friendMail, $options: "i" };
-      }
-  
-      // Fetch users matching the criteria
-      const users = await User.find(userQuery, { password: 0 });
-      const userIds = users.map((user) => user._id);
+  try {
+    const userId = req.user._id;
+    const { friendMail } = req.query;
 
-  
-      // Find users who have an existing conversation with the current user
-      const existingConversations = await Conversation.find({
-        participants: { $in: [userId] },
-      });
-  
-      // Extract user IDs with conversations
-      const conversationUserIds = new Set(
-        existingConversations.flatMap((conv) => conv.participants.map((id) => id.toString()))
-      );
-  
-      // Filter users who do NOT have an existing conversation
-      const usersWithoutConversations = users.filter(
-        (user) => !conversationUserIds.has(user._id.toString())
-      );
-  
-      return res.status(200).json({
-        message: "Filtered users with no conversation fetched successfully.",
-        data: usersWithoutConversations,
-        result: true,
-      });
-  
-    } catch (error) {
-      console.error("Error in getUsers:", error);
-      return res.status(500).json({ error });
+    // Construct query to find users excluding the current user
+    let userQuery = { _id: { $ne: userId } };
+
+    // If friendMail is provided, filter users by email (case-insensitive partial match)
+    if (friendMail) {
+      userQuery.email = { $regex: friendMail, $options: "i" };
     }
-  };
-  
-  
+
+    // Fetch users matching the criteria
+    const users = await User.find(userQuery, { password: 0 });
+    const userIds = users.map((user) => user._id);
+
+    // Find users who have an existing conversation with the current user
+    const existingConversations = await Conversation.find({
+      participants: { $in: [userId] },
+    });
+
+    // Extract user IDs with conversations
+    const conversationUserIds = new Set(
+      existingConversations.flatMap((conv) =>
+        conv.participants.map((id) => id.toString())
+      )
+    );
+
+    // Filter users who do NOT have an existing conversation
+    const usersWithoutConversations = users.filter(
+      (user) => !conversationUserIds.has(user._id.toString())
+    );
+
+    return res.status(200).json({
+      message: "Filtered users with no conversation fetched successfully.",
+      data: usersWithoutConversations,
+      result: true,
+    });
+  } catch (error) {
+    console.error("Error in getUsers:", error);
+    return res.status(500).json({ error });
+  }
+};
 
 export const getUserDetails = async (req, res) => {
   try {

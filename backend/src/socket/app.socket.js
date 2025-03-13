@@ -3,6 +3,8 @@ import {Server} from "socket.io";
 import {createServer} from "http";
 import jwt from "jsonwebtoken";
 import User from "../models/users.models.js";
+import { markAsRead } from "../controllers/messages.controller.js";
+import Messages from "../models/messages.models.js";
 
 const app = express();
 
@@ -51,15 +53,25 @@ io.on("connection",(socket)=>{
 
         socket?.on("markMessageAsRead",(newmessage)=>{
             // call the controller to handle read messages
-            console.log("s:",newmessage)
-            console.log("sender : ",userSocketMap[newmessage?.senderId])
-            const senderId = userSocketMap[newmessage?.senderId];
-            socket.to(senderId).emit("messageRead",newmessage)
+
+            markAsRead(newmessage?._id)
+            const senderId = userSocketMap[newmessage?.senderId.toString()];
+            socket.to(senderId).emit("messageHasBeenReaded",newmessage)
         })
 
         
-        socket?.on("markConversationAsRead",(newmessage)=>{
+        socket?.on("markConversationAsRead",async(data)=>{
             // call the controller to handle read messages
+            try {
+                const user = jwt.verify(data.token, process.env.SECRET_KEY);
+                await Messages.updateMany(
+                    { senderId: data.senderId, recipientId: user._id, readReceipts: { $ne: "read" } },
+                    { $set: { readReceipts: "read" } }
+                );
+                socket.to(userSocketMap[data.senderId]).emit("wholeConversationIsReaded",{recipientId:user._id});
+            } catch (error) {
+                console.log(error,"Error While Marking Conversation as Readed.!")
+            }
             
         })
 
@@ -72,6 +84,9 @@ io.on("connection",(socket)=>{
                 offlineMessages.delete(message); // Remove after sending
             }
         });
+        
+
+
 
         socket.on("disconnect",async()=>{
             console.log("User Disconnected : ",_id);

@@ -57,7 +57,7 @@ export default function Login() {
                 &&
                 <Overlay />
             }
-            <Container maxWidth="xs" className='my-3 min-h-fit' >
+            <Container maxWidth="xs" className='mt-60 lg:mt-5 min-h-fit' >
 
                 <Box
                     component="form"

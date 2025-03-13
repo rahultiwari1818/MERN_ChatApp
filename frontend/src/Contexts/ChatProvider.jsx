@@ -18,6 +18,8 @@ export default function ChatProvider({ children }) {
     const [newMessage, setNewMessage] = useState("");
     const [recipient, setRecipient] = useState("");
 
+    const [recipientConversationStatus,setRecipientConversationStatus] = useState("");
+
     const [users, setUsers] = useState([]);
     const [isUsersLoading,setIsUsersLoading] = useState(false);
     const [messageStatus,setMessageStatus] = useState("");
@@ -34,8 +36,6 @@ export default function ChatProvider({ children }) {
                 user._id === senderId 
         );
 
-        // If the user exists in the list and the chat is not open
-          // Remove the user from its current position
             const user = updatedUserList.splice(userIndex, 1)?.at(0);
             user.lastMessage = message
 
@@ -99,9 +99,9 @@ url,
         console.log(newMessage, "message")
         sortUser(newMessage?.senderId, newMessage?.message);
         if (recipient?._id === newMessage.senderId) {
-            
-            setNewMessage(newMessage);
             socket?.emit("markMessageAsRead",{_id:newMessage?._id,senderId:newMessage?.senderId});
+            const updatedMessage = {...newMessage,readReceipts:"read"};
+            setNewMessage(updatedMessage);
         }
         else {
             toast(
@@ -141,6 +141,18 @@ url,
                 }
             })
         }
+        setUsers((oldUsers)=>{
+            const updatedUserList = oldUsers.map((user)=>{
+                if(user._id === _id){
+                    return {
+                        ...user,
+                        isOnline:true
+                    }
+                }
+                return user;
+            })
+            return updatedUserList;
+        })
     }
 
 
@@ -153,14 +165,36 @@ url,
                 }
             })
         }
+        setUsers((oldUsers)=>{
+            const updatedUserList = oldUsers.map((user)=>{
+                if(user._id === _id){
+                    return {
+                        ...user,
+                        isOnline:false
+                    }
+                }
+                return user;
+            })
+            return updatedUserList;
+        })
     }
 
     const markMessageAsReadHandler = async(message) =>{
-        setMessageStatus(message)
-        console.log("read : ",message)
+        if(!message) return;
+        setMessageStatus(message);
     }
 
+    const wholeConversationIsReadedHandler = (data) =>{
+        if(!recipient) return;
+        if(recipient._id === data.recipientId){
+            setRecipientConversationStatus(true)
+        }
+    }
+
+
     useEffect(() => {
+
+        
 
         socket.on("connect", () => {
             console.log("connected");
@@ -184,9 +218,14 @@ url,
 
         socket?.on("userGoneOffline", gotOfflineHandler)
 
-        socket?.emit("markConversationAsRead",{senderId:recipient?._id});
+        if(recipient){
+            socket?.emit("markConversationAsRead",{senderId : recipient?._id,token: localStorage.getItem("token")});
+        }
 
-        socket?.on("messageRead",markMessageAsReadHandler)
+
+        socket?.on("messageHasBeenReaded",markMessageAsReadHandler)
+
+        socket?.on("wholeConversationIsReaded",wholeConversationIsReadedHandler);
 
 
         return () => {
@@ -197,7 +236,7 @@ url,
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading, changeNewMessage }}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading, changeNewMessage ,recipientConversationStatus}}>
             {children}
         </ChatContext.Provider>
     );
