@@ -1,5 +1,5 @@
 import express from "express";
-import { loginUser, registerUser, sendOTP, verifyOTP,getUserDetails, inviteFriend, getUsers, changeProfilePic, blockUser, unblockUser,resetPassword, getConversations } from "../controllers/user.controller.js";
+import { loginUser, registerUser, sendOTP, verifyOTP,getUserDetails, inviteFriend, getUsers, changeProfilePic, blockUser, unblockUser,resetPassword, getConversations, getAllUsers } from "../controllers/user.controller.js";
 import { verifyUser } from "../middlewares/auth.middleware.js";
 import multer from 'multer';
 import { storage } from "../config/cloudinary.config.js";
@@ -26,6 +26,8 @@ router.post("/inviteFriend",verifyUser,inviteFriend);
 router.get("/getUsers",verifyUser,getUsers);
 
 router.get("/getConversations",verifyUser,getConversations);
+
+router.get("getAllUsers",verifyUser,getAllUsers);
 
 router.patch("/changeProfilePic",verifyUser,upload.single("photo"),changeProfilePic);
 

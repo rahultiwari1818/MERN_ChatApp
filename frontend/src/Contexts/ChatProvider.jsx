@@ -30,6 +30,7 @@ export default function ChatProvider({ children }) {
 
 
     const sortUser = (senderId, message) => {
+        console.log("sort user called")
         const updatedUserList = [...users]; // Clone the existing user list
         const userIndex = updatedUserList.findIndex(
             (user) =>
@@ -97,7 +98,9 @@ url,
         const sound = new Audio(notificationSound);
         sound?.play();
         console.log(newMessage, "message")
-        sortUser(newMessage?.senderId, newMessage?.message);
+        if(!newMessage?.isNewConversation){
+            sortUser(newMessage?.senderId, newMessage?.message);
+        }
         if (recipient?._id === newMessage.senderId) {
             socket?.emit("markMessageAsRead",{_id:newMessage?._id,senderId:newMessage?.senderId});
             const updatedMessage = {...newMessage,readReceipts:"read"};
@@ -191,6 +194,14 @@ url,
         }
     }
 
+    const newConversationStartedHandler  = (newConversation) =>{
+        setUsers((oldUsers)=>{
+            if(oldUsers?.at(0)._id === newConversation._id) return oldUsers;
+            return [newConversation,...oldUsers];
+        })
+    }
+
+    console.log(users,"users")
 
     useEffect(() => {
 
@@ -226,6 +237,8 @@ url,
         socket?.on("messageHasBeenReaded",markMessageAsReadHandler)
 
         socket?.on("wholeConversationIsReaded",wholeConversationIsReadedHandler);
+
+        socket?.on("newConversationStarted",newConversationStartedHandler);
 
 
         return () => {

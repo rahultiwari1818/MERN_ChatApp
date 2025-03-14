@@ -133,7 +133,7 @@ export default function Message({
             maxWidth: "70%",
             padding: "10px 15px",
             borderRadius: "12px",
-            backgroundColor: isSender ? "#1976d2" : "#f5f5f5",
+            backgroundColor: isSender ? "#93C5FD" : "#f5f5f5",
             color: isSender ? "white" : "black",
             wordBreak: "break-word",
           }}

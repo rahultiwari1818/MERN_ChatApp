@@ -235,8 +235,8 @@ export const getConversations = async (req, res) => {
 
     // Format group conversations
     const formattedGroupConversations = groupConversations.map((group) => ({
-      groupname: group.name,
-      icon: group.groupIcon || "",
+      name: group.name,
+      profilePic: group.groupIcon || "",
       description: group.description || "",
       members: group.members.map((member) => ({
         _id: member.userId._id,
@@ -249,6 +249,7 @@ export const getConversations = async (req, res) => {
       //   messages: group.messages || [],
       lastMessage: group.lastMessage,
       lastMessageTime: group.lastMessageTime,
+      isGroup:true
     }));
 
     // Merge and sort all conversations
@@ -313,6 +314,30 @@ export const getUsers = async (req, res) => {
   } catch (error) {
     console.error("Error in getUsers:", error);
     return res.status(500).json({ error });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const { friendMail } = req.query;
+
+    let filter = {};
+    if (friendMail) {
+      filter.email = { $regex: friendMail, $options: "i" }; // Case-insensitive search
+    }
+
+    const users = await User.find(filter).select("-password");
+
+    return res
+      .status(200)
+      .json({
+        data: users,
+        message: "Users Fetched Successfully.!",
+        result: true,
+      });
+  } catch (error) {
+    console.error("Error in Get All Users:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

@@ -12,7 +12,8 @@ export default function CreateGroupDialog({ open, handleClose }) {
         groupName: "",
         groupImage: null,
         selectedUsers: [],
-        preview:null
+        preview:null,
+        groupDescription:""
     });
 
     const { users, getUsers } = useChat();
@@ -23,7 +24,8 @@ export default function CreateGroupDialog({ open, handleClose }) {
                 groupName: "",
                 groupImage: null,
                 selectedUsers: [],
-                preview:null
+                preview:null,
+                groupDescription:""
             })
             getUsers("");
         }
@@ -108,6 +110,15 @@ export default function CreateGroupDialog({ open, handleClose }) {
                     </label>
                     {groupData.groupImage && <Avatar src={groupData.preview} alt="Group" sx={{ width: 56, height: 56 }} />}
                 </Stack>
+
+                <TextField
+                    label="Group Description"
+                    variant="outlined"
+                    fullWidth
+                    value={groupData.groupDescription}
+                    onChange={(e) => setGroupData((prev) => ({ ...prev, groupDescription: e.target.value }))}
+                />
+
 
                 <TextField
                     label="Search Users"

@@ -152,7 +152,6 @@ export default function ChatScreen({ changeTextBoxCss }) {
   }, [newMessage]);
 
   useEffect(() => {
-    // markAsRead();
     getMessages();
   }, [recipient]);
 

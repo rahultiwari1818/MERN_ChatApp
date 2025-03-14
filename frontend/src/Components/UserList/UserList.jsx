@@ -46,7 +46,7 @@ export default function UserList({ handleClick }) {
 
 
   const usersToMap = useMemo(() => {
-    if (newMessage) {
+    if (newMessage && !newMessage.isNewConversation) {
       if(newMessage?.isSender){
         const updatedUserList = [...users]; // Clone the existing user list
         const userIndex = updatedUserList.findIndex(
@@ -67,7 +67,7 @@ export default function UserList({ handleClick }) {
       const updatedUserList = [...users]; // Clone the existing user list
       const userIndex = updatedUserList.findIndex(
         (user) =>
-          user._id === newMessage.senderId || user._id === newMessage.receiverId
+          user._id === newMessage.senderId 
       );
   
       // If the user exists in the list and the chat is not open
