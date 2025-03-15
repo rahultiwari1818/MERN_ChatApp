@@ -101,7 +101,7 @@ url,
         if(!newMessage?.isNewConversation){
             sortUser(newMessage?.senderId, newMessage?.message);
         }
-        if (recipient?._id === newMessage.senderId) {
+        if (recipient?._id === newMessage.senderId || recipient?._id === newMessage?.groupId) {
             socket?.emit("markMessageAsRead",{_id:newMessage?._id,senderId:newMessage?.senderId});
             const updatedMessage = {...newMessage,readReceipts:"read"};
             setNewMessage(updatedMessage);
@@ -201,7 +201,30 @@ url,
         })
     }
 
-    console.log(users,"users")
+    const removeExistingMemberFromGroup = (userId) =>{
+        setRecipient((old)=>{
+            return {
+                ...old,
+                members : old?.members?.filter((member)=>member._id !== userId)
+            }
+        })
+    }
+
+    const changeGroupMemberRole = (userId,role) =>{
+        setRecipient((old)=>{
+            return {
+                ...old,
+                members : old?.members?.map((member)=>{
+                    const newRole = member._id === userId ? role : member.role;
+                    return {
+                        ...member,
+                        role:newRole
+                    }
+                })
+            }
+        })
+    }
+
 
     useEffect(() => {
 
@@ -249,7 +272,7 @@ url,
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading, changeNewMessage ,recipientConversationStatus}}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading, changeNewMessage ,recipientConversationStatus,removeExistingMemberFromGroup,changeGroupMemberRole}}>
             {children}
         </ChatContext.Provider>
     );

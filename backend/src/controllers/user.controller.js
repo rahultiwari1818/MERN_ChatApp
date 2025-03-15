@@ -201,8 +201,8 @@ export const getConversations = async (req, res) => {
         lastSeen: otherParticipant?.lastSeen,
         lastMessage: conv.lastMessage,
         lastMessageTime: conv.lastMessageTime,
-        isBlocked: isBlocked.length > 0,
-        hasBlocked: hasBlocked.length > 0,
+        isBlocked: isBlocked?.length > 0,
+        hasBlocked: hasBlocked?.length > 0,
         isOnline: isUserOnline(otherParticipant?._id),
       };
     });
@@ -234,23 +234,40 @@ export const getConversations = async (req, res) => {
     }
 
     // Format group conversations
-    const formattedGroupConversations = groupConversations.map((group) => ({
-      name: group.name,
-      profilePic: group.groupIcon || "",
-      description: group.description || "",
-      members: group.members.map((member) => ({
-        _id: member.userId._id,
-        name: member.userId.name,
-        email: member.userId.email,
-        profilePic: member.userId.profilePic,
-        role: member.role,
-        lastSeen: member.lastSeen,
-      })),
-      //   messages: group.messages || [],
-      lastMessage: group.lastMessage,
-      lastMessageTime: group.lastMessageTime,
-      isGroup:true
-    }));
+
+    const formattedGroupConversations = groupConversations.map((group) => {
+      let isAdmin = false;
+
+      const groupMembers = group.members
+        .map((member) => {
+          isAdmin =
+            userId === member.userId._id.toString() && member.role === "admin";
+          return {
+            _id: member.userId._id,
+            name: member.userId._id.toString() === userId ? "You" : member.userId.name,
+            email: member.userId.email,
+            profilePic: member.userId.profilePic,
+            role: member.role,
+            lastSeen: member.lastSeen,
+            isYou : member.userId._id.toString() === userId,
+          };
+        })
+        .sort((a, b) => (a.role === "admin" ? -1 : 1));
+
+      return {
+        _id: group._id,
+        name: group.name,
+        profilePic: group.groupIcon || "",
+        description: group.description || "",
+        members: groupMembers,
+        //   messages: group.messages || [],
+        isAdmin: isAdmin,
+        lastMessage: group.lastMessage,
+        lastMessageTime: group.lastMessageTime,
+        isGroup: true,
+
+      };
+    });
 
     // Merge and sort all conversations
     const allConversations = [
@@ -328,13 +345,11 @@ export const getAllUsers = async (req, res) => {
 
     const users = await User.find(filter).select("-password");
 
-    return res
-      .status(200)
-      .json({
-        data: users,
-        message: "Users Fetched Successfully.!",
-        result: true,
-      });
+    return res.status(200).json({
+      data: users,
+      message: "Users Fetched Successfully.!",
+      result: true,
+    });
   } catch (error) {
     console.error("Error in Get All Users:", error);
     return res.status(500).json({ error: "Internal Server Error" });

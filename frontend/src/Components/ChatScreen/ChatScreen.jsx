@@ -44,18 +44,21 @@ export default function ChatScreen({ changeTextBoxCss }) {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const getMessages = async () => {
+  const getMessages = async (isGroup) => {
     try {
       if (!recipient) return;
       setIsLoadingMessages(true);
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/v1/messages/getAllMessages/${recipient?._id}`,
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-        }
-      );
+      
+      const url = isGroup 
+        ? `${process.env.REACT_APP_API_URL}/api/v1/group/${recipient?._id}/getMessages` 
+        : `${process.env.REACT_APP_API_URL}/api/v1/messages/getAllMessages/${recipient?._id}`;
+  
+      const { data } = await axios.get(url, {
+        headers: {
+          Authorization: localStorage.getItem("token"),
+        },
+      });
+  
       setMessages(() => data.data);
     } catch (error) {
       console.log(error);
@@ -63,6 +66,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
       setIsLoadingMessages(false);
     }
   };
+  
 
   function scrollToBottom() {
     if (messageBoxRef.current) {
@@ -70,76 +74,69 @@ export default function ChatScreen({ changeTextBoxCss }) {
     }
   }
 
-  const sendMessage = async () => {
+  const sendMessage = async (isGroup) => {
     try {
       if (
         !recipient ||
         (messageToBeSent.trim().length === 0 && selectedFiles.length === 0)
       )
         return;
-
+  
       const formData = new FormData();
       for (let file of selectedFiles) {
         formData.append(`media`, file);
       }
       formData.append("message", messageToBeSent);
       formData.append("recipient", recipient._id);
-
-      // Create a temporary message and add it to state
-      const mediaUrls = selectedFiles.map((file) => {
-        console.log(file);
-        return { url: URL.createObjectURL(file), type: file.type };
-      });
+  
+      const mediaUrls = selectedFiles.map((file) => ({
+        url: URL.createObjectURL(file),
+        type: file.type,
+      }));
+  
       const tempMessage = {
         message: messageToBeSent,
         media: mediaUrls,
-        senderId: "", // You might want to update this with the sender's ID
+        senderId: "",
         recipient: recipient._id,
         readReceipts: "not sent",
         timestamp: Date.now(),
         isSender: true,
+        isTemp : true
       };
-
+  
       setMessages((old) => [...old, tempMessage]);
-      // Clear the message input and selected files
       setMessageToBeSent("");
       setSelectedFiles([]);
-
-      // Make the API call to send the message
-      const { data } = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`,
-        formData,
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      // Once the API call is successful, replace the temporary message
+  
+      const url = recipient?.isGroup
+        ? `${process.env.REACT_APP_API_URL}/api/v1/group/sendMessage`
+        : `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`;
+  
+      const { data } = await axios.post(url, formData, {
+        headers: {
+          Authorization: localStorage.getItem("token"),
+          "Content-Type": "multipart/form-data",
+        },
+      });
+  
       setMessages((old) => {
-        // Find the temporary message by its timestamp or any unique property
         const updatedMessages = old.filter(
-          (msg) => msg.timestamp !== tempMessage.timestamp
+          (msg) => !msg?.isTemp
         );
-
-        // Add the new message data from the API response
         return [...updatedMessages, { ...data.data, isSender: true }];
       });
-
-      // Clear the message input and selected files
+  
       setMessageToBeSent("");
       setSelectedFiles([]);
       changeNewMessage({ ...data.data });
     } catch (error) {
-              // Clear the message input and selected files
       setMessageToBeSent("");
       setSelectedFiles([]);
       console.log(error);
     }
   };
-
+  
   const onDeletingMessage = useCallback((messageId) => {
     setMessages((old) => {
       return old.filter((oldMessage) => oldMessage._id !== messageId);
@@ -152,7 +149,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
   }, [newMessage]);
 
   useEffect(() => {
-    getMessages();
+    getMessages(recipient?.isGroup);
   }, [recipient]);
 
   // Ensure scrollToBottom is called after messages are updated
@@ -229,13 +226,16 @@ export default function ChatScreen({ changeTextBoxCss }) {
                 messages.map((message) => (
                   <Message
                     message={message.message}
-                    time={message.timestamp}
+                    time={message?.timestamp || message?.createdAt}
                     isSender={message.isSender}
                     key={message._id || message.timestamp}
                     messageId={message._id}
                     readReceipts={message?.readReceipts}
                     onDeletingMessage={onDeletingMessage}
                     media={message?.media}
+                    isGroup = {recipient?.isGroup}
+                    senderName = {message?.senderId?.name}
+                    senderProfilePic = {message?.senderId?.profilePic}
                   />
                 ))
               )}

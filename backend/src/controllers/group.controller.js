@@ -1,6 +1,8 @@
 import { uploadToCloudinary } from "../config/cloudinary.config.js";
 import Group from "../models/group.model.js";
 import GroupMessages from "../models/groupMessages.model.js";
+import User from "../models/users.models.js";
+import { getReceiverSocketId, io } from "../socket/app.socket.js";
 
 export const creategroup = async (req, res) => {
   try {
@@ -14,7 +16,7 @@ export const creategroup = async (req, res) => {
       });
     }
 
-    const users = selectedUsers.split(",").map(userId => ({
+    const users = selectedUsers.split(",").map((userId) => ({
       userId,
       role: "member",
     }));
@@ -23,7 +25,9 @@ export const creategroup = async (req, res) => {
     if (photo) {
       const result = await uploadToCloudinary(photo.path, "image");
       if (result?.message === "Fail") {
-        return res.status(500).json({ message: "Image upload failed", result: false });
+        return res
+          .status(500)
+          .json({ message: "Image upload failed", result: false });
       }
       groupIcon = result.url || "";
     }
@@ -35,10 +39,18 @@ export const creategroup = async (req, res) => {
       groupIcon,
     });
 
-    return res.status(201).json({ message: "Group Created Successfully", result: true, group: newGroup });
+    return res
+      .status(201)
+      .json({
+        message: "Group Created Successfully",
+        result: true,
+        group: newGroup,
+      });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };
 
@@ -50,9 +62,23 @@ export const getChat = async (req, res) => {
     const messages = await GroupMessages.find({
       groupId,
       deletedFor: { $ne: userId },
-    }).populate("senderId", "name email");
+    }).populate("senderId", "name email profilePic");
 
-    return res.status(200).json({ data: messages, message: "Chat Fetched Successfully.", result: true });
+    const updatedMessages = messages?.map((message) => {
+        return {
+          ...message.toObject(),
+          isSender: message.senderId?._id.toString() === userId,
+        };
+      });
+      
+
+    return res
+      .status(200)
+      .json({
+        data: updatedMessages,
+        message: "Chat Fetched Successfully.",
+        result: true,
+      });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -60,24 +86,86 @@ export const getChat = async (req, res) => {
 };
 
 export const sendGroupMessage = async (req, res) => {
-  try {
-    const { groupId } = req.params;
-    const { message } = req.body;
-    const senderId = req.user._id;
-
-    const group = await Group.findById(groupId);
-    if (!group) return res.status(404).json({ error: "Group not found" });
-
-    const newMessage = new GroupMessages({ groupId, senderId, message });
-    await newMessage.save();
-
-    return res.status(201).json({ message: "Message Sent Successfully!", result: true, data: newMessage });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
+    try {
+      const { message } = req.body;
+      const groupId = req.body?.recipient;
+      const senderId = req.user._id;
+      let mediaURLs = [];
+  
+      const group = await Group.findById(groupId).populate("members");
+      if (!group) return res.status(400).json({ error: "Group not found" });
+  
+      if (!message && req.files.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "Either message or media is required" });
+      }
+  
+      if (req.files && req.files.length > 0) {
+        for (let media of req.files) {
+          try {
+            const result = await uploadToCloudinary(media.path, media.mimetype);
+            if (result.message === "Fail") {
+              return res
+                .status(500)
+                .json({ message: "Media upload failed", result: false });
+            }
+            mediaURLs.push({
+              url: result.url,
+              type: media.mimetype.split("/")[0],
+            });
+          } catch (error) {
+            return res
+              .status(500)
+              .json({ message: "Error uploading media", error: error.message });
+          }
+        }
+      }
+  
+      const newMessage = new GroupMessages({
+        groupId,
+        senderId,
+        message,
+        media: mediaURLs,
+      });
+      await newMessage.save();
+  
+      const senderDetails = await User.findById(senderId).select("_id name email profilePic");
+  
+      const messageToEmit = {
+        _id: newMessage._id,
+        groupId,
+        senderId: senderDetails,
+        message,
+        media: mediaURLs,
+        isSender: false,
+        readReceipts: [],
+        deletedFor: [],
+        createdAt: newMessage.createdAt,
+        updatedAt: newMessage.updatedAt,
+        __v: newMessage.__v,
+      };
+  
+      group.members.forEach((member) => {
+        if (member.userId.toString() !== senderId.toString()) {
+          const receiverSocketId = getReceiverSocketId(member.userId.toString());
+          if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", messageToEmit);
+          }
+        }
+      });
+  
+      return res.status(201).json({
+        message: "Message Sent Successfully!",
+        result: true,
+        data: newMessage,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+  
 export const deleteGroupMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
@@ -91,7 +179,7 @@ export const deleteGroupMessage = async (req, res) => {
       await message.save();
     }
 
-    res.status(200).json({ result: true, message: "Message deleted for you" });
+   return  res.status(200).json({ result: true, message: "Message deleted for you" });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -106,14 +194,18 @@ export const addMembers = async (req, res) => {
     const group = await Group.findById(groupId);
     if (!group) return res.status(404).json({ error: "Group not found" });
 
-    userIds.forEach(userId => {
-      if (!group.members.some(member => member.userId.toString() === userId)) {
+    userIds.forEach((userId) => {
+      if (
+        !group.members.some((member) => member.userId.toString() === userId)
+      ) {
         group.members.push({ userId, role: "member" });
       }
     });
 
     await group.save();
-    return res.status(200).json({ message: "Members added successfully", result: true, group });
+    return res
+      .status(200)
+      .json({ message: "Members added successfully", result: true, group });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -133,9 +225,11 @@ export const removeMembers = async (req, res) => {
 
     if (!group) return res.status(404).json({ error: "Group not found" });
 
-    return res.status(200).json({ message: "Member removed successfully", result: true, group });
+    return res
+      .status(200)
+      .json({ message: "Member removed successfully", result: true, group });
   } catch (error) {
-    console.log(error);
+    console.log(" Error While Removing Member : ",error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -151,9 +245,12 @@ export const makeAdmin = async (req, res) => {
       { new: true }
     );
 
-    if (!group) return res.status(404).json({ error: "Group or member not found" });
+    if (!group)
+      return res.status(404).json({ error: "Group or member not found" });
 
-    return res.status(200).json({ message: "User promoted to admin", result: true, group });
+    return res
+      .status(200)
+      .json({ message: "User promoted to admin", result: true, group });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -171,9 +268,12 @@ export const removeAdmin = async (req, res) => {
       { new: true }
     );
 
-    if (!group) return res.status(404).json({ error: "Group or admin not found" });
+    if (!group)
+      return res.status(404).json({ error: "Group or admin not found" });
 
-    return res.status(200).json({ message: "User demoted to member", result: true, group });
+    return res
+      .status(200)
+      .json({ message: "User demoted to member", result: true, group });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -193,7 +293,9 @@ export const changeDescription = async (req, res) => {
 
     if (!group) return res.status(404).json({ error: "Group not found" });
 
-    return res.status(200).json({ message: "Group description updated", result: true, group });
+    return res
+      .status(200)
+      .json({ message: "Group description updated", result: true, data:group });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -205,11 +307,14 @@ export const changeGroupIcon = async (req, res) => {
     const { groupId } = req.params;
     const photo = req.file;
 
-    if (!photo) return res.status(400).json({ error: "Image file is required" });
+    if (!photo)
+      return res.status(400).json({ error: "Image file is required" });
 
     const result = await uploadToCloudinary(photo.path, "image");
     if (result?.message === "Fail") {
-      return res.status(500).json({ message: "Image upload failed", result: false });
+      return res
+        .status(500)
+        .json({ message: "Image upload failed", result: false });
     }
 
     const group = await Group.findByIdAndUpdate(
@@ -220,9 +325,42 @@ export const changeGroupIcon = async (req, res) => {
 
     if (!group) return res.status(404).json({ error: "Group not found" });
 
-    return res.status(200).json({ message: "Group icon updated", result: true, group });
+    return res
+      .status(200)
+      .json({ message: "Group icon updated", result: true, group });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
+export const clearGroupChat = async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const  userId  = req.user?._id;
+  
+      if (!groupId || !userId) {
+        return res.status(400).json({ message: "Group ID and User ID are required." });
+      }
+  
+      const updatedMessages = await GroupMessages.updateMany(
+        {  groupId },
+        { $addToSet: { deletedFor: userId } }
+      );
+
+          await Group.findByIdAndUpdate(groupId, {
+            lastMessage: "",
+            lastMessageTime: Date.now(),
+          });
+  
+      return res.status(200).json({
+        result: true,
+        message: "Group chat cleared for the user successfully.",
+        modifiedCount: updatedMessages.modifiedCount,
+      });
+    } catch (error) {
+      console.error("Error While Clearing Group Chat:", error);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  };

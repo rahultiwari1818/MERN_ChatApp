@@ -290,7 +290,7 @@ export const markAsRead = async (messageId) => {
     //     data: updatedMessage,
     //   });
   } catch (error) {
-    console.error("Error in markAsRead:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.log("Error in markAsRead:", error);
+    // return res.status(500).json({ error: "Internal Server Error" });
   }
 };
