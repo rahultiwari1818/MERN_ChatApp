@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import DialogComp from "../Common/Dialog";
 import { TextField, Button, Avatar, Stack, List, ListItem, ListItemAvatar, ListItemText, Checkbox } from "@mui/material";
 import { useChat } from "../../Contexts/ChatProvider";
@@ -48,7 +48,7 @@ export default function CreateGroupDialog({ open, handleClose }) {
 
     const toggleUserSelection = (user) => {
         const newSelectedUsers = groupData.selectedUsers.indexOf(user) >= 0 ?
-            groupData.selectedUsers.filter((userId) => userId != user)
+            groupData.selectedUsers.filter((userId) => userId !== user)
             :
             [...groupData.selectedUsers, user]
             ;
@@ -83,6 +83,17 @@ export default function CreateGroupDialog({ open, handleClose }) {
         
         handleClose();
     };
+
+      const usersToMap = useMemo(()=>{
+        const updatedList = [];
+         users?.forEach((user)=>{
+            let flag = false;
+            if(user?.isGroup) return;
+            updatedList.push(user)
+         })
+        return updatedList;
+      },[users]);
+    
 
     return (
         <DialogComp open={open} handleClose={handleClose} dialogTitle="Create New Group">
@@ -129,7 +140,8 @@ export default function CreateGroupDialog({ open, handleClose }) {
                 />
 
                 <List sx={{ maxHeight: 200, overflowY: "auto" }}>
-                    {users.map((user) => (
+                    {usersToMap.map((user) => (
+
                         <ListItem key={user._id} button onClick={() => toggleUserSelection(user._id)}>
                             <ListItemAvatar>
                                 <Avatar src={user?.profilePic} alt={user.name} />

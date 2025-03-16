@@ -1,15 +1,11 @@
 import React, { useCallback, useState } from "react";
 import { formatDate } from "../../Utils/utils";
-import { Avatar, Button, TextField, Typography } from "@mui/material";
+import { Avatar, Typography } from "@mui/material";
 import ProfileIcon from "../../Assets/SVGs/Profile.svg";
 import { useChat } from "../../Contexts/ChatProvider";
-import DialogComp from "../Common/Dialog";
 import axios from "axios";
 import { toast } from "react-toastify";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import DotMenuIcon from "../../Assets/Images/DotMenuIcon.png";
-import AddUserIcon from "../../Assets/Images/AddUserIcon.png";
+import UserDialog from "../RecipientInfoDialog/RecipientInfoDialog";
 
 export default function RecipientInfo({ clearChatMessagesHandler }) {
   const {
@@ -19,6 +15,18 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
     changeGroupMemberRole,
   } = useChat();
   const [openUserDialog, setOpenUserDialog] = useState(false);
+  const [openUpdateProfileDialog, setOpenUpdateProfileDialog] = useState(false);
+
+  const [openAddUserDialog,setOpenAddUserDialog] = useState(false);
+
+  const openAddUserDialogHandler = useCallback(()=>{
+    setOpenAddUserDialog(true);
+  },[]);
+
+  const closeAddUserDialogHandler = useCallback(()=>{
+    setOpenAddUserDialog(false);
+  },[]);
+
 
   const closeUserDialog = useCallback(() => {
     setOpenUserDialog(false);
@@ -215,6 +223,37 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
     }
   }, []);
 
+  const leaveGroupHandler = useCallback(async()=>{
+    try {
+        const url = `${process.env.REACT_APP_API_URL}/api/v1/group/leaveGroup/${recipient?._id}`;
+        const response = await axios.patch(
+          url,{},
+          {
+            headers: {
+              Authorization: localStorage.getItem("token"),
+            },
+          }
+        );
+        if (response.data.result) {
+          toast.success("Group Left Successfully!.");
+          removeExistingMemberFromGroup(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error while Leaving Group  :", error);
+        toast.error(
+          error?.response?.data?.message ||
+            "An error occurred while Leaving Group the user."
+        );
+      }
+  },[]);
+
+  const handleProfileClick = useCallback(() => {
+    setOpenUpdateProfileDialog(true);
+  }, []);
+
+  const closeUpdateProfileDialog = useCallback(() => {
+    setOpenUpdateProfileDialog(false);
+  }, []);
   return (
     <>
       <section
@@ -273,219 +312,16 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
         kickOutUserHandler={kickOutUserHandler}
         makeAdminHandler={makeAdminHandler}
         removeAdminHandler={removeAdminHandler}
+        openUpdateProfilePicDialog={openUpdateProfileDialog}
+        handleProfileClick={handleProfileClick}
+        closeUpdateProfileDialog={closeUpdateProfileDialog}
+        leaveGroupHandler={leaveGroupHandler}
+        openAddUserDialog={openAddUserDialog}
+        openAddUserDialogHandler={openAddUserDialogHandler}
+        closeAddUserDialogHandler={closeAddUserDialogHandler}
+        
       />
     </>
   );
 }
 
-const UserDialog = ({
-  open,
-  handleClose,
-  profilePic,
-  name,
-  email,
-  hasBlocked,
-  isBlocked,
-  blockHandler,
-  unblockHandler,
-  clearChatHandler,
-  isGroup,
-  members,
-  groupDescription,
-  isAdmin,
-  updateDescriptionHandler,
-  kickOutUserHandler,
-  makeAdminHandler,
-  removeAdminHandler,
-}) => {
-  const [description, setDescription] = useState(groupDescription);
-
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
-  };
-
-  return (
-    <DialogComp
-      open={open}
-      handleClose={handleClose}
-      dialogTitle={"User Information"}
-    >
-      <section className="flex flex-col items-center gap-4">
-        <Avatar
-          src={profilePic || ProfileIcon}
-          alt="Preview"
-          sx={{ width: 150, height: 150 }}
-        />
-        <Typography>
-          {isGroup && "Group "} Name: {name}
-        </Typography>
-
-        {isGroup && (
-          <section className="w-full p-3 border border-blue-500 rounded-lg shadow-md bg-white">
-            <Typography variant="h6" className="font-semibold text-blue-500">
-              Group Description
-            </Typography>
-            {isAdmin ? (
-              <div className="flex flex-col gap-2">
-                <TextField
-                  value={description}
-                  onChange={handleDescriptionChange}
-                  multiline
-                  rows={3}
-                  fullWidth
-                  variant="outlined"
-                />
-                <Button
-                  sx={{ backgroundColor: "blue", color: "white" }}
-                  onClick={() => updateDescriptionHandler(description)}
-                >
-                  Save Description
-                </Button>
-              </div>
-            ) : (
-              <Typography className="text-gray-600">
-                {groupDescription || "No description available"}
-              </Typography>
-            )}
-          </section>
-        )}
-
-        {isGroup && (
-          <section className="w-full border border-blue-500 rounded-lg shadow-md bg-white">
-            <Typography
-              variant="h6"
-              className="p-3 font-semibold bg-blue-500 text-white rounded-t-lg flex justify-between items-center"
-            >
-              <> Group Members</>
-
-              {isAdmin && <img src={AddUserIcon} alt="add user" className="h-7 cursor-pointer"/>}
-            </Typography>
-            <div className="divide-y divide-gray-300 max-h-[200px] overflow-y-scroll">
-              {members
-                ?.sort((a, b) => (a.role === "admin" ? -1 : 1)) // Ensure admins are at the top
-                .map((member) => (
-                  <div
-                    key={member._id}
-                    className="flex justify-between items-center p-3 hover:bg-gray-100 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        src={member.profilePic || ProfileIcon} // Default if no profilePic
-                        alt={member.name}
-                        sx={{ width: 40, height: 40 }}
-                      />
-                      <div>
-                        <Typography className="font-medium">
-                          {member.name}
-                        </Typography>
-                        <Typography className="text-sm text-gray-500">
-                          {member.email}
-                        </Typography>
-                      </div>
-                    </div>
-                    {member.role === "admin" && (
-                      <span className="mx-2 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded">
-                        Admin
-                      </span>
-                    )}
-                    {isAdmin && !member.isYou && (
-                      <MenuBasic
-                        Title={
-                          <img src={DotMenuIcon} alt="menu" className="h-7" />
-                        }
-                        isAdmin={member.role === "admin"}
-                        makeAdminHandler={makeAdminHandler}
-                        removeAdminHandler={removeAdminHandler}
-                        kickOutUserHandler={kickOutUserHandler}
-                        userId={member._id}
-                      />
-                    )}
-                  </div>
-                ))}
-            </div>
-          </section>
-        )}
-
-        {!isGroup && <Typography>Email: {email}</Typography>}
-
-        <Button
-          sx={{ backgroundColor: "red", color: "white" }}
-          onClick={clearChatHandler}
-        >
-          Clear Chat
-        </Button>
-
-        {!isGroup &&
-          !hasBlocked &&
-          (isBlocked ? (
-            <Button
-              sx={{ backgroundColor: "red", color: "white" }}
-              onClick={unblockHandler}
-            >
-              Unblock
-            </Button>
-          ) : (
-            <Button
-              sx={{ backgroundColor: "red", color: "white" }}
-              onClick={blockHandler}
-            >
-              Block
-            </Button>
-          ))}
-      </section>
-    </DialogComp>
-  );
-};
-
-function MenuBasic({
-  Title,
-  isAdmin,
-  kickOutUserHandler,
-  makeAdminHandler,
-  removeAdminHandler,
-  userId,
-}) {
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const open = Boolean(anchorEl);
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  return (
-    <div>
-      <Button
-        id="basic-button"
-        aria-controls={open ? "basic-menu" : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? "true" : undefined}
-        onClick={handleClick}
-      >
-        {Title}
-      </Button>
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{
-          "aria-labelledby": "basic-button",
-        }}
-      >
-        <MenuItem onClick={() => kickOutUserHandler(userId)}>Kick Out</MenuItem>
-        {!isAdmin ? (
-          <MenuItem onClick={() => makeAdminHandler(userId)}>
-            Make Admin
-          </MenuItem>
-        ) : (
-          <MenuItem onClick={() => removeAdminHandler(userId)}>
-            Remove Admin
-          </MenuItem>
-        )}
-      </Menu>
-    </div>
-  );
-}

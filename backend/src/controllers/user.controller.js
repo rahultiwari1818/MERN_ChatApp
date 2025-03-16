@@ -9,7 +9,7 @@ import {
 } from "../utils/utils.js";
 import User from "../models/users.models.js";
 import { getReceiverSocketId, io, isUserOnline } from "../socket/app.socket.js";
-import { uploadToCloudinary } from "../config/cloudinary.config.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "../config/cloudinary.config.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
 import GroupMessages from "../models/groupMessages.model.js";
@@ -240,8 +240,9 @@ export const getConversations = async (req, res) => {
 
       const groupMembers = group.members
         .map((member) => {
-          isAdmin =
-            userId === member.userId._id.toString() && member.role === "admin";
+            if(!isAdmin){
+                isAdmin = (userId === member.userId._id.toString() && member.role === "admin");
+            }
           return {
             _id: member.userId._id,
             name: member.userId._id.toString() === userId ? "You" : member.userId.name,
@@ -253,6 +254,7 @@ export const getConversations = async (req, res) => {
           };
         })
         .sort((a, b) => (a.role === "admin" ? -1 : 1));
+
 
       return {
         _id: group._id,
@@ -464,6 +466,16 @@ export const changeProfilePic = async (req, res) => {
         result: false,
       });
     }
+    const oldUserDetails = await User.findById(userId);
+
+    if(oldUserDetails.profilePic != ""){
+      const publicId = oldUserDetails.profilePic
+        .split("/")
+        .slice(-1)[0]
+        .split(".")[0];
+       await deleteFromCloudinary(publicId);
+    }
+
     const newProfilePicPath = result.url;
     await User.findOneAndUpdate(
       { _id: userId },

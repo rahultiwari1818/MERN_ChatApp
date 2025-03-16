@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyUser } from "../middlewares/auth.middleware.js";
-import { addMembers, changeDescription, clearGroupChat, creategroup, deleteGroupMessage, getChat, makeAdmin, removeAdmin, removeMembers, sendGroupMessage } from "../controllers/group.controller.js";
+import { addMembers, changeDescription, changeGroupIcon, clearGroupChat, creategroup, deleteGroupMessage, getChat, leaveGroup, makeAdmin, removeAdmin, removeMembers, sendGroupMessage } from "../controllers/group.controller.js";
 const router = express.Router();
 import multer from 'multer';
 import { storage } from "../config/cloudinary.config.js";
@@ -18,16 +18,20 @@ router.get("/:groupId/getMessages", verifyUser, getChat);
 
 router.delete("/deleteGroupMessage/:messageId", verifyUser,deleteGroupMessage);
 
-router.post("/addMembers",verifyUser,addMembers);
+router.post("/addMembers/:groupId",verifyUser,verifyAdmin,addMembers);
 
 router.put("/changeDescription/:groupId",verifyUser,verifyAdmin,changeDescription);
 
 router.patch("/removeMember/:groupId",verifyUser,verifyAdmin,removeMembers);
+
+router.patch("/leaveGroup/:groupId",verifyUser,leaveGroup);
 
 router.patch("/removeAdmin/:groupId",verifyUser,verifyAdmin,removeAdmin);
 
 router.patch("/makeAdmin/:groupId",verifyUser,verifyAdmin,makeAdmin)
 
 router.delete("/clearGroupChat/:groupId",verifyUser,clearGroupChat);
+
+router.patch("/changeGroupIcon/:groupId",verifyUser,verifyAdmin,upload.single("photo"),changeGroupIcon);
 
 export default router;

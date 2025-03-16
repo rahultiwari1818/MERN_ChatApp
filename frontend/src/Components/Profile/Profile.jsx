@@ -110,9 +110,6 @@ export default function Profile() {
           >
             <CameraIcon />
           </button>
-          {/* <Button variant="contained" color="primary" size="small" onClick={handleEditToggle}>
-            {editable ? 'Cancel' : 'Edit Profile'}
-          </Button> */}
         </section>
 
         <section className="w-full md:w-2/3">

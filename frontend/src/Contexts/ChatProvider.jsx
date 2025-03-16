@@ -210,6 +210,15 @@ url,
         })
     }
 
+    const addNewMembersInGroup = (users) =>{
+        setRecipient((old)=>{
+            return {
+                ...old,
+                members:users
+            }
+        })
+    }
+
     const changeGroupMemberRole = (userId,role) =>{
         setRecipient((old)=>{
             return {
@@ -221,6 +230,15 @@ url,
                         role:newRole
                     }
                 })
+            }
+        })
+    }
+
+    const updateGroupIcon = (groupIcon) =>{
+        setRecipient((old)=>{
+            return {
+                ...old,
+                profilePic:groupIcon
             }
         })
     }
@@ -272,7 +290,7 @@ url,
 
 
     return (
-        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading, changeNewMessage ,recipientConversationStatus,removeExistingMemberFromGroup,changeGroupMemberRole}}>
+        <ChatContext.Provider value={{ newMessage, changeRecipient, recipient, changeBlockingStatus, users, getUsers,messageStatus,isUsersLoading, changeNewMessage ,recipientConversationStatus,removeExistingMemberFromGroup,changeGroupMemberRole,updateGroupIcon,addNewMembersInGroup}}>
             {children}
         </ChatContext.Provider>
     );
