@@ -75,6 +75,7 @@ export default function UserList({ handleClick }) {
         // Remove the user from its current position
         const user = updatedUserList.splice(userIndex, 1).at(0);
         // Add the user to the top of the list
+        
         updatedUserList.unshift({...user,lastMessage:newMessage.message,lastMessageTime:Date.now()});
       }
       console.log(updatedUserList);
