@@ -170,7 +170,6 @@ export default function ChatScreen({ changeTextBoxCss }) {
         }
         return message;
       });
-      console.log(updatedMessages);
       return updatedMessages;
     });
   }, [messageStatus]);
