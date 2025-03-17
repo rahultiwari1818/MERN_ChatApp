@@ -157,6 +157,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
     scrollToBottom();
   }, [messages]);
 
+  // Creating Problems.!
   useEffect(() => {
     if (!messageStatus) return;
     setMessages((old) => {
@@ -173,7 +174,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
       console.log(updatedMessages);
       return updatedMessages;
     });
-  }, [messageStatus, messages]);
+  }, [messageStatus]);
 
   useEffect(() => {
     if (!recipientConversationStatus) return;
