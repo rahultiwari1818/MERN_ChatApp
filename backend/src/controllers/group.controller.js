@@ -373,7 +373,7 @@ export const changeGroupIcon = async (req, res) => {
 
     const oldGroupDetails = await Group.findById(groupId);
 
-    if(oldGroupDetails.groupIcon != ""){
+    if(oldGroupDetails.groupIcon !== undefined && oldGroupDetails.groupIcon != ""){
       const publicId = oldGroupDetails.groupIcon
         .split("/")
         .slice(-1)[0]

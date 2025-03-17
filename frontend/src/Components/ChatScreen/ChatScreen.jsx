@@ -18,6 +18,8 @@ export default function ChatScreen({ changeTextBoxCss }) {
     messageStatus,
     changeNewMessage,
     recipientConversationStatus,
+    changeRecipientConversationStatus,
+    changeMessageStatus
   } = useChat();
 
   const clearChatMessages = useCallback(() => {
@@ -172,6 +174,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
       });
       return updatedMessages;
     });
+    changeMessageStatus();
   }, [messageStatus]);
 
   useEffect(() => {
@@ -184,7 +187,8 @@ export default function ChatScreen({ changeTextBoxCss }) {
         };
       });
     });
-  }, [messages, recipientConversationStatus]);
+    changeRecipientConversationStatus(false)
+  }, [recipientConversationStatus]);
 
   return (
     <section
