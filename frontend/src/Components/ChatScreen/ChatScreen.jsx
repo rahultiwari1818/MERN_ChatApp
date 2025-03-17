@@ -157,7 +157,6 @@ export default function ChatScreen({ changeTextBoxCss }) {
     scrollToBottom();
   }, [messages]);
 
-  // Creating Problems.!
   useEffect(() => {
     if (!messageStatus) return;
     setMessages((old) => {
