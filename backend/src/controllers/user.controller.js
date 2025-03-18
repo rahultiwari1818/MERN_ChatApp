@@ -467,8 +467,7 @@ export const changeProfilePic = async (req, res) => {
       });
     }
     const oldUserDetails = await User.findById(userId);
-
-    if(oldUserDetails.profilePic != ""){
+    if(oldUserDetails.profilePic !== undefined && oldUserDetails.profilePic != ""){
       const publicId = oldUserDetails.profilePic
         .split("/")
         .slice(-1)[0]

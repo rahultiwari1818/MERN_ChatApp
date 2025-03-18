@@ -35,10 +35,13 @@ export default function UserList({ handleClick }) {
     
   }, [searchEmail, debouncedGetUsers,showOtherUsers]);
 
+
   // Fetch all users initially
   useEffect(() => {
     setSearchEmail("");
   }, [showOtherUsers]);
+
+
 
   const closeShowOthers = () =>{
     setShowOtherUsers(false);
@@ -69,7 +72,6 @@ export default function UserList({ handleClick }) {
         (user) =>
           user._id === newMessage.senderId 
       );
-  
       // If the user exists in the list and the chat is not open
       if (userIndex !== -1 && recipient._id !== newMessage.senderId) {
         // Remove the user from its current position

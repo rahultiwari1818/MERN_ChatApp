@@ -51,11 +51,15 @@ const UserDialog = ({
 }) => {
   const [description, setDescription] = useState(groupDescription);
 
+  useEffect(()=>{
+    setDescription(description);
+  },[groupDescription])
+
   const handleDescriptionChange = (e) => {
     setDescription(e.target.value);
   };
 
-  const { recipient, updateGroupIcon } = useChat();
+  const { recipient, updateGroupIcon  } = useChat();
 
   return (
     <DialogComp
@@ -196,9 +200,7 @@ const UserDialog = ({
           >
             Clear Chat
           </Button>
-        </section>
-
-        {!isGroup &&
+          {!isGroup &&
           !hasBlocked &&
           (isBlocked ? (
             <Button
@@ -215,6 +217,9 @@ const UserDialog = ({
               Block
             </Button>
           ))}
+        </section>
+
+
       </section>
       <ProfileDialog
         open={openUpdateProfilePicDialog}
@@ -223,6 +228,7 @@ const UserDialog = ({
         isGroup={true}
         handleNewProfilePic={updateGroupIcon}
       />
+      
       <AddUserModal
         open={openAddUserDialog}
         close={closeAddUserDialogHandler}
@@ -331,6 +337,7 @@ function AddUserModal({ open, close, existingUsers }) {
 
   const usersToMap = useMemo(() => {
     const updatedList = [];
+    if(!existingUsers) return [];
     users?.forEach((user) => {
       let flag = false;
       if (user?.isGroup) return;

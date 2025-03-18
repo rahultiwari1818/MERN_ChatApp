@@ -132,6 +132,7 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
       );
       if (response.data.result) {
         toast.success("Group Description Updated Successfully!.");
+        
       }
     } catch (error) {
       console.error("Error while Clearing Chat :", error);
