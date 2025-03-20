@@ -29,20 +29,6 @@ export default function ChatProvider({ children }) {
     setNewMessage(mess);
   };
 
-  const sortUser = (senderId, message) => {
-    console.log("sort user called");
-    const updatedUserList = [...users]; // Clone the existing user list
-    const userIndex = updatedUserList.findIndex(
-      (user) => user._id === senderId
-    );
-
-    const user = updatedUserList.splice(userIndex, 1)?.at(0);
-    
-
-    // Add the user to the top of the list
-    updatedUserList?.unshift({...user,lastMessage:message,lastMessageTime:Date.now()});
-    setUsers(updatedUserList);
-  };
 
   const getUsers = async (email, showOtherUsers) => {
     try {
@@ -55,7 +41,7 @@ export default function ChatProvider({ children }) {
           Authorization: localStorage.getItem("token"),
         },
       });
-      setUsers(data.data.length === 0 ? [] : data.data);
+      setUsers(()=>data.data.length === 0 ? [] : data.data);
     } catch (error) {
       console.log(error?.response);
       //   if (error?.response?.status === 400) navigate('/');
@@ -103,32 +89,31 @@ export default function ChatProvider({ children }) {
     }
   };
 
-  const newMessageHandler = async (newMessage) => {
+  const newMessageHandler =  (message) => {
+
     const sound = new Audio(notificationSound);
     sound?.play().catch((error) => {
       console.error("Error playing sound:", error);
     });
-    console.log(newMessage, "message");
-    if (!newMessage?.isNewConversation) {
-    //   sortUser(newMessage?.senderId, newMessage?.message);
-    }
-    if (
-      recipient?._id === newMessage.senderId ||
-      recipient?._id === newMessage?.groupId
+    console.log(message,users, "message");
+    if ( recipient &&
+(      (recipient?._id === message.senderId) ||
+      (recipient?._id === message?.groupId))
     ) {
       socket?.emit("markMessageAsRead", {
-        _id: newMessage?._id,
-        senderId: newMessage?.senderId,
+        _id: message?._id,
+        senderId: message?.senderId,
       });
-      const updatedMessage = { ...newMessage, readReceipts: "read" };
+      const updatedMessage = { ...message, readReceipts: "read" };
       setNewMessage(updatedMessage);
     } else {
+      setNewMessage({...message,isReceived : true,isNotForCurrentUser:true})
       toast(
         <ToastBox
-          newMessage={newMessage}
+          newMessage={message}
           changeRecipient={changeRecipient}
           users={users}
-          isGroup={newMessage?.groupId}
+          isGroup={message?.groupId}
         />,
         {
           position: "top-center",

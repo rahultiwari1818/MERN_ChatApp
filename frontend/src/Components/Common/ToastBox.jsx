@@ -4,14 +4,9 @@ import ProfileIcon from "../../Assets/SVGs/Profile.svg";
 
 export default function ToastBox({ newMessage, changeRecipient, users, isGroup }) {
 
-    const [groupData,setGroupdata] = useState({});
 
-    useEffect(()=>{
-        if(isGroup){
-            const groupDetails = isGroup ? users?.find((user) => user._id === newMessage.groupId) : undefined;
-            setGroupdata(groupDetails);
-        }
-    },[isGroup]);
+
+
 
 
 
@@ -21,11 +16,11 @@ export default function ToastBox({ newMessage, changeRecipient, users, isGroup }
   };
 
   const profilePic = isGroup
-    ? groupData?.profilePic
+    ? newMessage?.profilePic
     : newMessage?.senderProfilePic || ProfileIcon;
 
   return (
-    <section className="flex justify-between items-center px-2 py-2 cursor-pointer" onClick={handleRecipientChange}>
+    <section className="flex justify-between items-center px-2 py-1 cursor-pointer text-xs md:text-sm" onClick={handleRecipientChange}>
       <section>
         <Avatar
           src={profilePic}
@@ -35,7 +30,7 @@ export default function ToastBox({ newMessage, changeRecipient, users, isGroup }
         />
       </section>
       <section className="flex flex-col justify-between">
-        <p className="font-bold">{isGroup ? groupData?.name : newMessage.senderName}</p>
+        <p className="font-bold">{isGroup ? newMessage?.name : newMessage.senderName}</p>
         <p>{newMessage.message.slice(0, 10)}</p>
       </section>
     </section>

@@ -27,6 +27,11 @@ const GroupSchema = new Schema(
       maxlength: 300,
       default: "",
     },
+    lastMessage:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"GroupMessages",
+      default:null
+    }
   },
   { timestamps: true }
 );

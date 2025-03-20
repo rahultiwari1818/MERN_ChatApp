@@ -173,6 +173,9 @@ export const getConversations = async (req, res) => {
         select: "message media senderId timestamp",
         populate: { path: "senderId", select: "_id email name profilePic" },
       })
+      .populate({path:"lastMessage",
+        select:"message media senderId timestamp _id readReceipts",
+      })
       .sort({ lastMessageTime: -1 })
       .lean();
 
@@ -191,6 +194,7 @@ export const getConversations = async (req, res) => {
         otherParticipant.blockedUsers.filter(
           (user) => userId === user.toString()
         );
+        
 
       return {
         _id: otherParticipant?._id,
@@ -199,7 +203,7 @@ export const getConversations = async (req, res) => {
         profilePic: otherParticipant?.profilePic || "",
         // messages: conv.messages || [],
         lastSeen: otherParticipant?.lastSeen,
-        lastMessage: conv.lastMessage,
+        lastMessage: {...conv.lastMessage,isSender:conv.lastMessage.senderId.toString() === userId},
         lastMessageTime: conv.lastMessageTime,
         isBlocked: isBlocked?.length > 0,
         hasBlocked: hasBlocked?.length > 0,
@@ -211,6 +215,11 @@ export const getConversations = async (req, res) => {
     const groupConversations = await Group.find({ "members.userId": userId })
       .populate("createdBy", "name profilePic")
       .populate("members.userId", "name profilePic email")
+      .populate({path:"lastMessage",
+        select:"message media senderId timestamp _id ",
+        populate: { path: "senderId", select: "_id email name profilePic" },
+
+      })
       .lean();
 
     // Fetch latest messages for each group
@@ -226,9 +235,8 @@ export const getConversations = async (req, res) => {
         .populate("senderId", "name profilePic")
         .lean();
 
-      group.lastMessage =
-        lastMessage?.message ||
-        (lastMessage?.media?.length ? "Media Message" : "");
+
+      group.lastMessage = {...group.lastMessage,isSender : group.lastMessage?.senderId?._id.toString() === userId},
       group.lastMessageTime = lastMessage?.createdAt || group.updatedAt;
       //   group.messages = groupMessages || [];
     }
