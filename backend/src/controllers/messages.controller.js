@@ -104,16 +104,7 @@ export const sendMessage = async (req, res) => {
       participants: { $all: [senderId, recipient] },
     });
 
-    let isNewConversation = false;
-    if (!conversation) {
-      isNewConversation = true;
-      conversation = await Conversation.create({
-        participants: [senderId, recipient],
-        lastMessage: message || "Media sent",
-        lastMessageTime: Date.now(),
-      });
-    }
-
+    
     const newMessage = new Messages({
       senderId,
       recipientId: recipient,
@@ -122,11 +113,24 @@ export const sendMessage = async (req, res) => {
       readReceipts: isUserOnline(recipient) ? "delivered" : "sent",
     });
 
+
+    await newMessage.save();
+
+    let isNewConversation = false;
+    if (!conversation) {
+      isNewConversation = true;
+      conversation = await Conversation.create({
+        participants: [senderId, recipient],
+        lastMessage : newMessage._id,
+        lastMessageTime: Date.now(),
+      });
+    }
+
+    conversation.lastMessage = newMessage._id;
     conversation.messages.push(newMessage._id);
-    conversation.lastMessage = message || "Media sent";
     conversation.lastMessageTime = Date.now();
 
-    await Promise.all([conversation.save(), newMessage.save()]);
+    await Promise.all([conversation.save()]);
 
     const populatedMessage = await Messages.findById(newMessage._id)
       .populate("senderId", "name profilePic")
@@ -174,7 +178,7 @@ export const sendMessage = async (req, res) => {
       data: messageToBeSent,
     });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };

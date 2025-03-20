@@ -128,6 +128,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
         );
         return [...updatedMessages, { ...data.data, isSender: true }];
       });
+
   
       setMessageToBeSent("");
       setSelectedFiles([]);
@@ -147,6 +148,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
   useEffect(() => {
     if (newMessage?.isSender) return;
+    if(newMessage?.isNotForCurrentUser) return;
     setMessages((old) => [...old, newMessage]);
   }, [newMessage]);
 

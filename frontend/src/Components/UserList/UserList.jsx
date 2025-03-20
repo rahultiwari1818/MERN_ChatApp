@@ -50,7 +50,7 @@ export default function UserList({ handleClick }) {
 
   const usersToMap = useMemo(() => {
     if (newMessage && !newMessage.isNewConversation) {
-      if(newMessage?.isSender){
+      if(newMessage?.isSender && !newMessage.groupId && !newMessage.isReceived){
         const updatedUserList = [...users]; // Clone the existing user list
         const userIndex = updatedUserList.findIndex(
           (user) =>
@@ -63,10 +63,49 @@ export default function UserList({ handleClick }) {
           // Remove the user from its current position
           const user = updatedUserList.splice(userIndex, 1).at(0);
           // Add the user to the top of the list
-          updatedUserList.unshift({...user,lastMessage:newMessage.message,lastMessageTime:Date.now()});
+          updatedUserList.unshift({...user,lastMessage:newMessage,lastMessageTime:Date.now()});
         }
         return updatedUserList;
       }
+
+      if(newMessage?.isSender && newMessage?.groupId && !newMessage.isReceived){
+        const updatedUserList = [...users]; // Clone the existing user list
+        const userIndex = updatedUserList.findIndex(
+          (user) =>
+            user._id === newMessage.groupId
+         
+        );
+        // If the user exists in the list and the chat is not open
+        if (userIndex !== -1 && recipient._id !== newMessage.senderId) {
+          // Remove the user from its current position
+          const user = updatedUserList.splice(userIndex, 1).at(0);
+          // Add the user to the top of the list
+          updatedUserList.unshift({...user,lastMessage:newMessage,lastMessageTime:Date.now()});
+        }
+        // console.log(updatedUserList , "upl grp");
+        return updatedUserList;
+      }
+
+      // console.log(newMessage, "gr")
+
+      if(newMessage?.groupId){
+        const updatedUserList = [...users]; // Clone the existing user list
+        const userIndex = updatedUserList.findIndex(
+          (user) =>
+            user._id === newMessage.groupId
+         
+        );
+        // If the user exists in the list and the chat is not open
+        if (userIndex !== -1 && recipient._id !== newMessage.senderId) {
+          // Remove the user from its current position
+          const user = updatedUserList.splice(userIndex, 1).at(0);
+          // Add the user to the top of the list
+          updatedUserList.unshift({...user,lastMessage:newMessage,lastMessageTime:Date.now()});
+        }
+        // console.log(updatedUserList , "upl grp rec");
+        return updatedUserList;
+      }
+
       const updatedUserList = [...users]; // Clone the existing user list
       const userIndex = updatedUserList.findIndex(
         (user) =>
@@ -77,9 +116,9 @@ export default function UserList({ handleClick }) {
         // Remove the user from its current position
         const user = updatedUserList.splice(userIndex, 1).at(0);
         // Add the user to the top of the list
-        updatedUserList.unshift({...user,lastMessage:newMessage.message,lastMessageTime:Date.now()});
+        updatedUserList.unshift({...user,lastMessage:newMessage,lastMessageTime:Date.now()});
       }
-      console.log(updatedUserList);
+      // console.log(updatedUserList , "upl");
       return updatedUserList;
     }
     return users;
@@ -87,13 +126,13 @@ export default function UserList({ handleClick }) {
 
 
   return (
-    <section className="h-screen px-10 overflow-scroll fixed bg-blue-300 text-white  z-10 lg:z-[0] md:w-[30%]">
+    <section className="h-screen px-10 overflow-scroll fixed bg-blue-300 text-white  z-10 lg:z-[0] w-full md:w-[30%] ">
       <Typography
         variant="h6"
         sx={{ mt: 2, mb: 2 }}
         onClick={() => {
           handleClick()
-          changeRecipient("");
+          changeRecipient(null);
         }}
       >
         {

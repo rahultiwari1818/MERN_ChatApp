@@ -125,6 +125,12 @@ export const sendGroupMessage = async (req, res) => {
     });
     await newMessage.save();
 
+    await Group.findByIdAndUpdate(groupId,
+      {
+        lastMessage:newMessage._id
+      }
+    )
+
     const senderDetails = await User.findById(senderId).select(
       "_id name email profilePic"
     );
@@ -138,6 +144,8 @@ export const sendGroupMessage = async (req, res) => {
       isSender: false,
       readReceipts: [],
       deletedFor: [],
+      profilePic:group.groupIcon,
+      name:group.name,
       createdAt: newMessage.createdAt,
       updatedAt: newMessage.updatedAt,
       __v: newMessage.__v,
@@ -152,10 +160,12 @@ export const sendGroupMessage = async (req, res) => {
       }
     });
 
+    messageToEmit.isSender = true;
+
     return res.status(201).json({
       message: "Message Sent Successfully!",
       result: true,
-      data: newMessage,
+      data: messageToEmit,
     });
   } catch (error) {
     console.log(error);
@@ -414,10 +424,10 @@ export const clearGroupChat = async (req, res) => {
       { $addToSet: { deletedFor: userId } }
     );
 
-    await Group.findByIdAndUpdate(groupId, {
-      lastMessage: "",
-      lastMessageTime: Date.now(),
-    });
+    // await Group.findByIdAndUpdate(groupId, {
+    //   lastMessage: null,
+    //   lastMessageTime: Date.now(),
+    // });
 
     return res.status(200).json({
       result: true,
