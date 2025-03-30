@@ -170,7 +170,7 @@ export const getConversations = async (req, res) => {
       })
       .populate({
         path: "messages",
-        select: "message media senderId timestamp",
+        select: "message media senderId timestamp readReceipts",
         populate: { path: "senderId", select: "_id email name profilePic" },
       })
       .populate({path:"lastMessage",
@@ -195,6 +195,12 @@ export const getConversations = async (req, res) => {
           (user) => userId === user.toString()
         );
         
+      const unreadedMessagesCount =  conv.messages.reduce((acc,mess)=>{
+        if(mess.senderId._id.toString() !== userId && mess.readReceipts !== "read"){
+          return acc+1;
+        }
+        return acc;
+      },0)  
 
       return {
         _id: otherParticipant?._id,
@@ -208,6 +214,7 @@ export const getConversations = async (req, res) => {
         isBlocked: isBlocked?.length > 0,
         hasBlocked: hasBlocked?.length > 0,
         isOnline: isUserOnline(otherParticipant?._id),
+        unreadedMessagesCount:unreadedMessagesCount
       };
     });
 
@@ -264,6 +271,11 @@ export const getConversations = async (req, res) => {
         .sort((a, b) => (a.role === "admin" ? -1 : 1));
 
 
+        // const unreadedMessagesCount = await  GroupMessages.countDocuments({
+
+        // })
+
+
       return {
         _id: group._id,
         name: group.name,
@@ -275,6 +287,7 @@ export const getConversations = async (req, res) => {
         lastMessage: group.lastMessage,
         lastMessageTime: group.lastMessageTime,
         isGroup: true,
+        // unreadedMessagesCount:unreadedMessagesCount
 
       };
     });

@@ -115,6 +115,14 @@ export default function User({ user, handleClick, isSkeleton }) {
                 </>
               )}
               {
+
+                user?.unreadedMessagesCount > 1
+                ?
+                <>
+                  {user?.unreadedMessagesCount} New Messages
+                </>
+                :
+
                 user?.lastMessage?.media?.length > 0
                 ?
                   

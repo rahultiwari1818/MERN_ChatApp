@@ -171,6 +171,7 @@ export default function Message({
                     <img
                       key={index}
                       src={item.url}
+                      loading="lazy"
                       alt={`media-${index}`}
                       style={{ width: "100%", maxWidth: "300px", borderRadius: "8px" }}
                       className="my-2"

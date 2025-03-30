@@ -17,16 +17,15 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
   const [openUserDialog, setOpenUserDialog] = useState(false);
   const [openUpdateProfileDialog, setOpenUpdateProfileDialog] = useState(false);
 
-  const [openAddUserDialog,setOpenAddUserDialog] = useState(false);
+  const [openAddUserDialog, setOpenAddUserDialog] = useState(false);
 
-  const openAddUserDialogHandler = useCallback(()=>{
+  const openAddUserDialogHandler = useCallback(() => {
     setOpenAddUserDialog(true);
-  },[]);
+  }, []);
 
-  const closeAddUserDialogHandler = useCallback(()=>{
+  const closeAddUserDialogHandler = useCallback(() => {
     setOpenAddUserDialog(false);
-  },[]);
-
+  }, []);
 
   const closeUserDialog = useCallback(() => {
     setOpenUserDialog(false);
@@ -132,7 +131,6 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
       );
       if (response.data.result) {
         toast.success("Group Description Updated Successfully!.");
-        
       }
     } catch (error) {
       console.error("Error while Clearing Chat :", error);
@@ -224,29 +222,30 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
     }
   }, []);
 
-  const leaveGroupHandler = useCallback(async()=>{
+  const leaveGroupHandler = useCallback(async () => {
     try {
-        const url = `${process.env.REACT_APP_API_URL}/api/v1/group/leaveGroup/${recipient?._id}`;
-        const response = await axios.patch(
-          url,{},
-          {
-            headers: {
-              Authorization: localStorage.getItem("token"),
-            },
-          }
-        );
-        if (response.data.result) {
-          toast.success("Group Left Successfully!.");
-          removeExistingMemberFromGroup(response.data.data);
+      const url = `${process.env.REACT_APP_API_URL}/api/v1/group/leaveGroup/${recipient?._id}`;
+      const response = await axios.patch(
+        url,
+        {},
+        {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
         }
-      } catch (error) {
-        console.error("Error while Leaving Group  :", error);
-        toast.error(
-          error?.response?.data?.message ||
-            "An error occurred while Leaving Group the user."
-        );
+      );
+      if (response.data.result) {
+        toast.success("Group Left Successfully!.");
+        removeExistingMemberFromGroup(response.data.data);
       }
-  },[]);
+    } catch (error) {
+      console.error("Error while Leaving Group  :", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "An error occurred while Leaving Group the user."
+      );
+    }
+  }, []);
 
   const handleProfileClick = useCallback(() => {
     setOpenUpdateProfileDialog(true);
@@ -281,7 +280,18 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
           <Typography variant="h6" color="#ffffff">
             {recipient.name}
           </Typography>
-          {recipient?.isOnline ? (
+
+          {recipient?.isTyping ? (
+            <Typography variant="p" color="green">
+              {
+                recipient?.typer 
+                ?
+                `${recipient?.typer} is typing...`
+                :
+                "Typing..."
+              }
+            </Typography>
+          ) : recipient?.isOnline ? (
             <Typography variant="p" color="green">
               Online
             </Typography>
@@ -320,9 +330,7 @@ export default function RecipientInfo({ clearChatMessagesHandler }) {
         openAddUserDialog={openAddUserDialog}
         openAddUserDialogHandler={openAddUserDialogHandler}
         closeAddUserDialogHandler={closeAddUserDialogHandler}
-        
       />
     </>
   );
 }
-

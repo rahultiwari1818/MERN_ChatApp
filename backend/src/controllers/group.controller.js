@@ -38,6 +38,7 @@ export const creategroup = async (req, res) => {
       createdBy: req.user._id,
       groupIcon,
     });
+    
 
     return res.status(201).json({
       message: "Group Created Successfully",
