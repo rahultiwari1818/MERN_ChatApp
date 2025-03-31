@@ -4,14 +4,19 @@ import Login from '../Components/Login/Login'
 import { useAuth } from '../Contexts/AuthProvider'
 import { useNavigate } from 'react-router-dom'
 import "./RegistrationPage.css";
+import { useOverlay } from '../Contexts/OverlayProvider'
 
 export default function RegistrationPage() {
   const navigate = useNavigate();
 
   const {isAuthenticated} = useAuth();
 
+  const {setOverlay} = useOverlay();
+
   useEffect(()=>{
+    setOverlay(true);
     if(isAuthenticated) navigate("/chat");
+    setOverlay(false);
   },[]);
 
   return (

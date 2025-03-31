@@ -19,7 +19,8 @@ export default function ChatScreen({ changeTextBoxCss }) {
     changeNewMessage,
     recipientConversationStatus,
     changeRecipientConversationStatus,
-    changeMessageStatus
+    changeMessageStatus,
+    handleTyping
   } = useChat();
 
   const clearChatMessages = useCallback(() => {
@@ -50,17 +51,17 @@ export default function ChatScreen({ changeTextBoxCss }) {
     try {
       if (!recipient) return;
       setIsLoadingMessages(true);
-      
-      const url = isGroup 
-        ? `${process.env.REACT_APP_API_URL}/api/v1/group/${recipient?._id}/getMessages` 
+
+      const url = isGroup
+        ? `${process.env.REACT_APP_API_URL}/api/v1/group/${recipient?._id}/getMessages`
         : `${process.env.REACT_APP_API_URL}/api/v1/messages/getAllMessages/${recipient?._id}`;
-  
+
       const { data } = await axios.get(url, {
         headers: {
           Authorization: localStorage.getItem("token"),
         },
       });
-  
+
       setMessages(() => data.data);
     } catch (error) {
       console.log(error);
@@ -68,13 +69,14 @@ export default function ChatScreen({ changeTextBoxCss }) {
       setIsLoadingMessages(false);
     }
   };
-  
 
   function scrollToBottom() {
     if (messageBoxRef.current) {
       messageBoxRef.current.scrollTop = messageBoxRef.current.scrollHeight;
     }
   }
+
+  
 
   const sendMessage = async (isGroup) => {
     try {
@@ -83,19 +85,19 @@ export default function ChatScreen({ changeTextBoxCss }) {
         (messageToBeSent.trim().length === 0 && selectedFiles.length === 0)
       )
         return;
-  
+
       const formData = new FormData();
       for (let file of selectedFiles) {
         formData.append(`media`, file);
       }
       formData.append("message", messageToBeSent);
       formData.append("recipient", recipient._id);
-  
+
       const mediaUrls = selectedFiles.map((file) => ({
         url: URL.createObjectURL(file),
         type: file.type,
       }));
-  
+
       const tempMessage = {
         message: messageToBeSent,
         media: mediaUrls,
@@ -104,32 +106,29 @@ export default function ChatScreen({ changeTextBoxCss }) {
         readReceipts: "not sent",
         timestamp: Date.now(),
         isSender: true,
-        isTemp : true
+        isTemp: true,
       };
-  
+
       setMessages((old) => [...old, tempMessage]);
       setMessageToBeSent("");
       setSelectedFiles([]);
-  
+
       const url = recipient?.isGroup
         ? `${process.env.REACT_APP_API_URL}/api/v1/group/sendMessage`
         : `${process.env.REACT_APP_API_URL}/api/v1/messages/sendMessage`;
-  
+
       const { data } = await axios.post(url, formData, {
         headers: {
           Authorization: localStorage.getItem("token"),
           "Content-Type": "multipart/form-data",
         },
       });
-  
+
       setMessages((old) => {
-        const updatedMessages = old.filter(
-          (msg) => !msg?.isTemp
-        );
+        const updatedMessages = old.filter((msg) => !msg?.isTemp);
         return [...updatedMessages, { ...data.data, isSender: true }];
       });
 
-  
       setMessageToBeSent("");
       setSelectedFiles([]);
       changeNewMessage({ ...data.data });
@@ -139,7 +138,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
       console.log(error);
     }
   };
-  
+
   const onDeletingMessage = useCallback((messageId) => {
     setMessages((old) => {
       return old.filter((oldMessage) => oldMessage._id !== messageId);
@@ -148,11 +147,12 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
   useEffect(() => {
     if (newMessage?.isSender) return;
-    if(newMessage?.isNotForCurrentUser) return;
+    if (newMessage?.isNotForCurrentUser) return;
     setMessages((old) => [...old, newMessage]);
   }, [newMessage]);
 
   useEffect(() => {
+    if(recipient?.typingHandling) return;
     getMessages(recipient?.isGroup);
   }, [recipient]);
 
@@ -160,6 +160,8 @@ export default function ChatScreen({ changeTextBoxCss }) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+
 
   useEffect(() => {
     if (!messageStatus) return;
@@ -189,7 +191,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
         };
       });
     });
-    changeRecipientConversationStatus(false)
+    changeRecipientConversationStatus(false);
   }, [recipientConversationStatus]);
 
   return (
@@ -238,9 +240,9 @@ export default function ChatScreen({ changeTextBoxCss }) {
                     readReceipts={message?.readReceipts}
                     onDeletingMessage={onDeletingMessage}
                     media={message?.media}
-                    isGroup = {recipient?.isGroup}
-                    senderName = {message?.senderId?.name}
-                    senderProfilePic = {message?.senderId?.profilePic}
+                    isGroup={recipient?.isGroup}
+                    senderName={message?.senderId?.name}
+                    senderProfilePic={message?.senderId?.profilePic}
                   />
                 ))
               )}
@@ -336,13 +338,17 @@ export default function ChatScreen({ changeTextBoxCss }) {
           <textarea
             rows={1}
             value={messageToBeSent}
-            onChange={(e) => setMessageToBeSent(e.target.value)}
+            onChange={(e) => {
+              setMessageToBeSent(e.target.value);
+              handleTyping();
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
               }
             }}
+            onkeyP
             placeholder="Your Message"
             className="flex-1 resize-none overflow-auto p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             style={{ maxHeight: "150px" }}

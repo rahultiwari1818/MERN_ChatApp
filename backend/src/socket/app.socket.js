@@ -3,6 +3,7 @@ import {Server} from "socket.io";
 import {createServer} from "http";
 import jwt from "jsonwebtoken";
 import User from "../models/users.models.js";
+import Group from "../models/group.model.js";
 import { markAsRead } from "../controllers/messages.controller.js";
 import Messages from "../models/messages.models.js";
 
@@ -75,16 +76,53 @@ io.on("connection",(socket)=>{
             
         })
 
+        socket?.on("typing",async(data)=>{
+            try {
+                const user =  jwt.verify(data.token, process.env.SECRET_KEY);
+                if(data?.isGroup){
+                    const groupDetails = await Group.findById(data._id);
+                    groupDetails?.members?.forEach((member)=>{
+                        if(member?.userId.toString() === user._id) return;
+
+                        if(isUserOnline(member?.userId.toString())){
+                            socket?.to(userSocketMap[member?.userId.toString()])?.emit("recipientTyping",{
+                                _id:data._id,
+                                name : user.name,
+                                isTyping:data?.isTyping
+                            })
+                        }
+                    })
+                }
+                else{
+                    if(isUserOnline(data?._id)){
+                        socket?.to(userSocketMap[data?._id])?.emit("recipientTyping",{
+                            _id:user._id,
+                            isTyping:data?.isTyping
+                        })
+                    }
+                }
+                
+            } catch (error) {
+                console.log(error,"Error While Marking Conversation as Readed.!")
+            }
+        })
+
         
 
-
-        offlineMessages.forEach((message) => {
-            if (message.recipientId === _id) {
-                io.to(socket.id).emit("newMessage", message);
-                offlineMessages.delete(message); // Remove after sending
+        offlineMessages.forEach(async (message) => {
+            // console.log(message,offlineMessages)
+            // if (message.recipientId?.toString() === _id) {
+            //     io.to(userSocketMap[_id]).emit("newMessage", message);
+            //     offlineMessages.delete(message); // Remove after sending
+            // } 
+            if (message.recipientId.toString() === _id) {
+                const updatedMessage = await Messages.findByIdAndUpdate(message._id, {
+                    readReceipts: "delivered"
+                });
+                io.to(userSocketMap[message.senderId.toString()]).emit("updateReadReceipt",updatedMessage);
+                offlineMessages.delete(message); // Remove after updating read receipt
             }
         });
-        
 
 
 

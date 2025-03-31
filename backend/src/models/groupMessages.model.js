@@ -17,6 +17,10 @@ const GroupMessagesSchema = new Schema(
       type: String,
       trim: true,
     },
+    event:{
+      type:String,
+      default:""
+    },
     media: [
       {
         url: { type: String, required: true },

@@ -29,7 +29,6 @@ export default function ChatProvider({ children }) {
     setNewMessage(mess);
   };
 
-
   const getUsers = async (email, showOtherUsers) => {
     try {
       setIsUsersLoading(true);
@@ -41,7 +40,7 @@ export default function ChatProvider({ children }) {
           Authorization: localStorage.getItem("token"),
         },
       });
-      setUsers(()=>data.data.length === 0 ? [] : data.data);
+      setUsers(() => (data.data.length === 0 ? [] : data.data));
     } catch (error) {
       console.log(error?.response);
       //   if (error?.response?.status === 400) navigate('/');
@@ -63,14 +62,14 @@ export default function ChatProvider({ children }) {
           isBlocked: status,
         };
       });
-      setUsers((old)=>{
-        return old?.map((user)=>{
-            if(user._id === recipient._id){
-                return {...user,isBlocked:status};
-            }
-            return user;
-        })
-      })
+      setUsers((old) => {
+        return old?.map((user) => {
+          if (user._id === recipient._id) {
+            return { ...user, isBlocked: status };
+          }
+          return user;
+        });
+      });
     } else {
       setRecipient((old) => {
         return {
@@ -78,27 +77,26 @@ export default function ChatProvider({ children }) {
           hasBlocked: status,
         };
       });
-      setUsers((old)=>{
-        return old?.map((user)=>{
-            if(user._id === recipient._id){
-                return {...user,hasBlocked:status};
-            }
-            return user;
-        })
-      })
+      setUsers((old) => {
+        return old?.map((user) => {
+          if (user._id === recipient._id) {
+            return { ...user, hasBlocked: status };
+          }
+          return user;
+        });
+      });
     }
   };
 
-  const newMessageHandler =  (message) => {
-
+  const newMessageHandler = (message) => {
     const sound = new Audio(notificationSound);
     sound?.play().catch((error) => {
       console.error("Error playing sound:", error);
     });
-    console.log(message,users, "message");
-    if ( recipient &&
-(      (recipient?._id === message.senderId) ||
-      (recipient?._id === message?.groupId))
+    if (
+      recipient &&
+      (recipient?._id === message.senderId ||
+        recipient?._id === message?.groupId)
     ) {
       socket?.emit("markMessageAsRead", {
         _id: message?._id,
@@ -107,7 +105,25 @@ export default function ChatProvider({ children }) {
       const updatedMessage = { ...message, readReceipts: "read" };
       setNewMessage(updatedMessage);
     } else {
-      setNewMessage({...message,isReceived : true,isNotForCurrentUser:true})
+      setNewMessage({
+        ...message,
+        isReceived: true,
+        isNotForCurrentUser: true,
+      });
+
+      setUsers((old)=>{
+        return old?.map((user)=>{
+          if(user._id === newMessage.senderId){
+            return {
+              ...user,
+              unreadedMessagesCount : user.unreadedMessagesCount+1
+            }
+          }
+          return user;
+        })
+      })
+      
+
       toast(
         <ToastBox
           newMessage={message}
@@ -192,9 +208,9 @@ export default function ChatProvider({ children }) {
     setMessageStatus(message);
   };
 
-  const changeMessageStatus = async() =>{
+  const changeMessageStatus = async () => {
     setMessageStatus(null);
-  }
+  };
 
   const wholeConversationIsReadedHandler = (data) => {
     if (!recipient) return;
@@ -203,9 +219,9 @@ export default function ChatProvider({ children }) {
     }
   };
 
-  const changeRecipientConversationStatus = () =>{
+  const changeRecipientConversationStatus = () => {
     setRecipientConversationStatus(false);
-  }
+  };
 
   const newConversationStartedHandler = (newConversation) => {
     setUsers((oldUsers) => {
@@ -265,6 +281,61 @@ export default function ChatProvider({ children }) {
     });
   };
 
+  const handleTyping = () => {
+    let typingTimeout;
+    if (!recipient) return;
+    const packet = {
+      _id: recipient._id,
+      isGroup: recipient?.isGroup,
+      token: localStorage.getItem("token"),
+      isTyping: true,
+    };
+    socket.emit("typing", packet); // Replace with actual user info
+    clearTimeout(typingTimeout); // Reset typing timeout
+    typingTimeout = setTimeout(() => {
+      packet.isTyping = false;
+      socket.emit("typing", packet); // Clear typing status after 1 second
+    }, 3000); // Typing indicator disappears after 1 second
+  };
+
+  const recipientTypingHandler = (data) => {
+    if (data._id === recipient?._id) {
+      setRecipient((old) => {
+        return {
+          ...old,
+          isTyping: data?.isTyping,
+          typingHandling : true,
+          typer:data?.name
+        };
+      });
+    } else {
+    }
+  };
+
+
+  const changeUnreadedMessageCount = () =>{
+    if(recipient && recipient?.unreadedMessagesCount > 0){
+      setUsers((old)=>{
+        return old?.map((user)=>{
+          if(user._id === recipient._id){
+            return {
+              ...user,
+              unreadedMessagesCount:0
+            }
+          }
+          return user
+        })
+      })
+    }
+  }
+
+  const updateReadReceiptHandler = (data) =>{
+    // console.log(data)
+    // if(data?.senderId === recipient._id){
+    //   console.log(data)
+    // }
+  }
+
   useEffect(() => {
     socket.on("connect", () => {
       console.log("connected");
@@ -299,6 +370,12 @@ export default function ChatProvider({ children }) {
 
     socket?.on("newConversationStarted", newConversationStartedHandler);
 
+    socket?.on("recipientTyping", recipientTypingHandler);
+
+    socket?.on("updateReadReceipt",updateReadReceiptHandler)
+
+    changeUnreadedMessageCount();
+
     return () => {
       socket.off("newMessage");
     };
@@ -323,7 +400,8 @@ export default function ChatProvider({ children }) {
         addNewMembersInGroup,
         updateGroupDescription,
         changeRecipientConversationStatus,
-        changeMessageStatus
+        changeMessageStatus,
+        handleTyping,
       }}
     >
       {children}
