@@ -104,7 +104,6 @@ export const sendMessage = async (req, res) => {
       participants: { $all: [senderId, recipient] },
     });
 
-    
     const newMessage = new Messages({
       senderId,
       recipientId: recipient,
@@ -113,7 +112,6 @@ export const sendMessage = async (req, res) => {
       readReceipts: isUserOnline(recipient) ? "delivered" : "sent",
     });
 
-
     await newMessage.save();
 
     let isNewConversation = false;
@@ -121,7 +119,7 @@ export const sendMessage = async (req, res) => {
       isNewConversation = true;
       conversation = await Conversation.create({
         participants: [senderId, recipient],
-        lastMessage : newMessage._id,
+        lastMessage: newMessage._id,
         lastMessageTime: Date.now(),
       });
     }
@@ -141,7 +139,7 @@ export const sendMessage = async (req, res) => {
       senderName: populatedMessage.senderId.name,
       senderProfilePic: populatedMessage.senderId.profilePic,
       senderId: populatedMessage.senderId._id,
-      isNewConversation
+      isNewConversation,
     };
 
     const receiverSocketId = getReceiverSocketId(recipient);
@@ -161,8 +159,8 @@ export const sendMessage = async (req, res) => {
         hasBlocked: false,
         isOnline: isUserOnline(req.user?._id),
       };
-      if(receiverSocketId){
-          io.to(receiverSocketId).emit("newConversationStarted", newConversation);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("newConversationStarted", newConversation);
       }
     }
 
@@ -206,14 +204,7 @@ export const deleteMessage = async (req, res) => {
 
     // Soft delete: Add user to deletedFor array
     message.deletedFor.push(userId);
-    if (
-      message.deletedFor.includes(message.senderId.toString()) &&
-      message.deletedFor.includes(message.recipientId.toString())
-    ) {
-      await Messages.findByIdAndDelete(messageId);
-    } else {
-      await message.save();
-    }
+    await message.save();
 
     return res.status(200).json({
       message: "Message Deleted Successfully",
@@ -224,6 +215,55 @@ export const deleteMessage = async (req, res) => {
     return res.status(500).json({
       error,
     });
+  }
+};
+
+export const deleteForEveryone = async (req, res) => {
+  try {
+    const { messageId } = req.params; // Assuming the message ID is passed as a route parameter
+    const userId = req.user._id;
+
+    if (!messageId) {
+      return res.status(400).json({
+        message: "Message ID is required",
+        result: false,
+      });
+    }
+
+    // Find and delete the message
+
+    const message = await Messages.findById({ _id: messageId });
+    if(message.senderId.toString() !== userId){
+      return res.status(402).json({
+        message:"Unauthiorized User.!"
+      })
+    }
+    if (message.deletedFor.includes(userId)) {
+      return res.status(200).json({
+        message: "Message already deleted",
+        result: true,
+      });
+    }
+
+    // Soft delete: Add user to deletedFor array
+    message.deletedFor.push(userId);
+    message.deletedFor.push(message.recipientId);
+    await message.save();
+
+    if(isUserOnline(message.recipientId)){
+      io.to(getReceiverSocketId(message.recipientId)).emit("messageDeletedForEveryone",{
+        senderId:userId,
+        messageId:messageId
+      })
+    }
+
+    return res.status(200).json({
+      message: "Message Deleted Successfully",
+      result: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -256,8 +296,10 @@ export const clearChat = async (req, res) => {
       deletedFor: { $size: 2 }, // Message deleted for both users
     });
 
+    const lastMessage = conversation.messages.at(-1);
+
     await Conversation.findByIdAndUpdate(conversation._id, {
-      lastMessage: "",
+      lastMessage: lastMessage,
       lastMessageTime: Date.now(),
     });
 

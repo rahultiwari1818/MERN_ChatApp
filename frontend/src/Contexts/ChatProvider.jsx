@@ -25,9 +25,15 @@ export default function ChatProvider({ children }) {
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [messageStatus, setMessageStatus] = useState("");
 
+  const [deleteMessageForEveryone,setDeleteMessageForEveryone] = useState("");
+
   const changeNewMessage = (mess) => {
     setNewMessage(mess);
   };
+
+  const changeDeleteMessageForEveryone = () =>{
+    setDeleteMessageForEveryone("");
+  }
 
   const getUsers = async (email, showOtherUsers) => {
     try {
@@ -158,11 +164,13 @@ export default function ChatProvider({ children }) {
   };
 
   const cameOnlineHandler = async ({ _id }) => {
-    if (recipient?._id === _id) {
+
+    if (recipient && recipient?._id === _id) {
       setRecipient(() => {
         return {
           ...recipient,
           isOnline: true,
+          isChanged:true
         };
       });
     }
@@ -181,13 +189,17 @@ export default function ChatProvider({ children }) {
   };
 
   const gotOfflineHandler = async ({ _id }) => {
-    if (recipient?._id === _id) {
-      setRecipient(() => {
-        return {
-          ...recipient,
-          isOnline: false,
-        };
-      });
+    if(recipient){
+      if (recipient?._id === _id) {
+        setRecipient(() => {
+          return {
+            ...recipient,
+            isOnline: false,
+            isChanged:true
+
+          };
+        });
+      }
     }
     setUsers((oldUsers) => {
       const updatedUserList = oldUsers.map((user) => {
@@ -205,6 +217,22 @@ export default function ChatProvider({ children }) {
 
   const markMessageAsReadHandler = async (message) => {
     if (!message) return;
+
+    setUsers((old) => {
+      return old?.map((user) => {
+        // console.log(user.lastMessage , message)
+        if (user.lastMessage._id === message._id) {
+          return {
+            ...user,
+            lastMessage: {
+              ...user.lastMessage, 
+              readReceipts: "read",
+            },
+          };
+        }
+        return user;
+      });
+    });
     setMessageStatus(message);
   };
 
@@ -336,7 +364,20 @@ export default function ChatProvider({ children }) {
     // }
   }
 
+  const messageDeletedForEveryoneHandler = (data) =>{
+    try {
+      if(data.senderId === recipient?._id){
+        setDeleteMessageForEveryone(data.messageId)
+      }
+    } catch (error) {
+      
+    }
+  }
+
   useEffect(() => {
+
+
+
     socket.on("connect", () => {
       console.log("connected");
     });
@@ -348,6 +389,7 @@ export default function ChatProvider({ children }) {
     });
 
     socket?.on("newMessage", newMessageHandler);
+
 
     socket?.on("userBlocked", blockUserHandler);
 
@@ -373,6 +415,8 @@ export default function ChatProvider({ children }) {
     socket?.on("recipientTyping", recipientTypingHandler);
 
     socket?.on("updateReadReceipt",updateReadReceiptHandler)
+
+    socket?.on("messageDeletedForEveryone",messageDeletedForEveryoneHandler)
 
     changeUnreadedMessageCount();
 
@@ -402,6 +446,8 @@ export default function ChatProvider({ children }) {
         changeRecipientConversationStatus,
         changeMessageStatus,
         handleTyping,
+        deleteMessageForEveryone,
+        changeDeleteMessageForEveryone
       }}
     >
       {children}

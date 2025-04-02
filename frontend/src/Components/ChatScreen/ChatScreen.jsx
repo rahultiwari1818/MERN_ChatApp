@@ -20,7 +20,9 @@ export default function ChatScreen({ changeTextBoxCss }) {
     recipientConversationStatus,
     changeRecipientConversationStatus,
     changeMessageStatus,
-    handleTyping
+    handleTyping,
+    deleteMessageForEveryone,
+    changeDeleteMessageForEveryone
   } = useChat();
 
   const clearChatMessages = useCallback(() => {
@@ -193,6 +195,20 @@ export default function ChatScreen({ changeTextBoxCss }) {
     });
     changeRecipientConversationStatus(false);
   }, [recipientConversationStatus]);
+
+  useEffect(()=>{
+    if(deleteMessageForEveryone.length === 0){
+      return;
+    }
+
+    setMessages((old)=>{
+      return old.filter((message)=>{
+        return message._id !== deleteMessageForEveryone;
+      })
+    })
+    
+    changeDeleteMessageForEveryone("");
+  },[deleteMessageForEveryone])
 
   return (
     <section

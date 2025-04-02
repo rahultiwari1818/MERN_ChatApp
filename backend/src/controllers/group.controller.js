@@ -2,7 +2,7 @@ import { deleteFromCloudinary, uploadToCloudinary } from "../config/cloudinary.c
 import Group from "../models/group.model.js";
 import GroupMessages from "../models/groupMessages.model.js";
 import User from "../models/users.models.js";
-import { getReceiverSocketId, io } from "../socket/app.socket.js";
+import { getReceiverSocketId, io, isUserOnline } from "../socket/app.socket.js";
 
 export const creategroup = async (req, res) => {
   try {
@@ -195,6 +195,43 @@ export const deleteGroupMessage = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const deleteGroupMessageForEveryone = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await GroupMessages.findById(messageId);
+    if (!message) return res.status(404).json({ error: "Message not found" });
+
+    const group = await Group.findById(message.groupId);
+
+
+
+    if (!message.deletedFor.includes(userId)) {
+      group.members.forEach((member)=>{
+        message.deletedFor.push(member.userId);
+        if(isUserOnline(member.userId)){
+              io.to(getReceiverSocketId(member.userId)).emit("messageDeletedForEveryone",{
+                senderId:message.groupId,
+                messageId:messageId
+              })
+            }
+      })
+      await message.save();
+    }
+
+    // console.log(message)
+
+    return res
+      .status(200)
+      .json({ result: true, message: "Message deleted for Everyone" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 
 export const addMembers = async (req, res) => {
   try {

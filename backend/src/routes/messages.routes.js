@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyUser } from "../middlewares/auth.middleware.js";
-import { deleteMessage, getMessages, sendMessage , clearChat } from "../controllers/messages.controller.js";
+import { deleteMessage, getMessages, sendMessage , clearChat, deleteForEveryone } from "../controllers/messages.controller.js";
 import { isBlocked } from "../middlewares/isBlocked.middleware.js";
 const router = express.Router();
 import multer from 'multer';
@@ -13,6 +13,8 @@ router.post("/sendMessage",verifyUser,upload.array("media",10),isBlocked,sendMes
 router.get("/getAllMessages/:recipientId",verifyUser,getMessages);
 
 router.delete("/:messageId",verifyUser,deleteMessage);
+
+router.delete("/deleteForEveryone/:messageId",verifyUser,deleteForEveryone);
 
 router.delete("/clearChat/:friendId",verifyUser,clearChat)
 
