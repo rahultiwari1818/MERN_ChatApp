@@ -49,7 +49,11 @@ io.on("connection",(socket)=>{
             io.emit("userCameOnline",{
                 _id:_id
             })
-        };
+        }
+        else{
+            console.log("socket disconnected...!")
+            socket.disconnect();
+        }
 
 
         socket?.on("markMessageAsRead",(newmessage)=>{
@@ -137,7 +141,9 @@ io.on("connection",(socket)=>{
     
         })
     } catch (error) {
+
         console.log("Socket Error : ",error);
+        socket.disconnect();
     }
 
     

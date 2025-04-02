@@ -7,6 +7,12 @@ import {
   Button,
   Skeleton,
   Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import DialogComp from "../Common/Dialog";
@@ -32,7 +38,6 @@ export default function Message({
   senderName,
   senderProfilePic,
 }) {
-
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openMediPreview, setOpenMediaPreview] = useState({
     isOpen: false,
@@ -40,8 +45,7 @@ export default function Message({
     type: "",
   });
 
-  const {recipient}    = useChat();
-  
+  const { recipient } = useChat();
 
   const closeMediaPreview = useCallback(() => {
     setOpenMediaPreview({
@@ -61,25 +65,40 @@ export default function Message({
     });
   };
 
-  const deleteHandler = useCallback(async () => {
+  const deleteHandler = useCallback(async (deleteChat) => {
     try {
       if (!messageId) {
         toast.error("Message ID is required.");
         return;
       }
 
+      
+
       if (readReceipts === "not sent") return;
 
-      const url = recipient?.isGroup ? `${process.env.REACT_APP_API_URL}/api/v1/group/deleteGroupMessage/${messageId}` : `${process.env.REACT_APP_API_URL}/api/v1/messages/${messageId}`;
+      
 
-      const response = await axios.delete(
-        url,
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-        }
-      );
+      const url = recipient?.isGroup
+        ? 
+          deleteChat === "me"
+          ?
+          `${process.env.REACT_APP_API_URL}/api/v1/group/deleteGroupMessage/${messageId}`
+          :
+          `${process.env.REACT_APP_API_URL}/api/v1/group/deleteGroupMessage/deleteForEveryone/${messageId}`
+
+        : 
+        deleteChat === "me"
+        ?
+        `${process.env.REACT_APP_API_URL}/api/v1/messages/${messageId}`
+        :
+        `${process.env.REACT_APP_API_URL}/api/v1/messages/deleteForEveryone/${messageId}`
+        ;
+
+      const response = await axios.delete(url, {
+        headers: {
+          Authorization: localStorage.getItem("token"),
+        },
+      });
 
       if (response.data.result) {
         toast.success(response.data.message || "Message deleted successfully.");
@@ -101,7 +120,6 @@ export default function Message({
   const closeDialog = useCallback(() => {
     setOpenDeleteDialog(false);
   }, []);
-
 
   if (isSkeleton) {
     return (
@@ -139,7 +157,11 @@ export default function Message({
         className="cursor-pointer"
       >
         {!isSender && isGroup && (
-          <Avatar src={senderProfilePic} alt={senderName} sx={{ width: 32, height: 32, marginRight: 1 }} />
+          <Avatar
+            src={senderProfilePic}
+            alt={senderName}
+            sx={{ width: 32, height: 32, marginRight: 1 }}
+          />
         )}
         <Box
           sx={{
@@ -156,7 +178,10 @@ export default function Message({
           }}
         >
           {isGroup && !isSender && (
-            <Typography variant="caption" className="text-wrap text-[8px] md:text-xs lg:text-sm text-blue-500">
+            <Typography
+              variant="caption"
+              className="text-wrap text-[8px] md:text-xs lg:text-sm text-blue-500"
+            >
               {senderName}
             </Typography>
           )}
@@ -173,7 +198,11 @@ export default function Message({
                       src={item.url}
                       loading="lazy"
                       alt={`media-${index}`}
-                      style={{ width: "100%", maxWidth: "300px", borderRadius: "8px" }}
+                      style={{
+                        width: "100%",
+                        maxWidth: "300px",
+                        borderRadius: "8px",
+                      }}
                       className="my-2"
                       onClick={() => setMediaData(item.url, item.type)}
                     />
@@ -184,7 +213,11 @@ export default function Message({
                     <video
                       key={index}
                       controls
-                      style={{ width: "100%", maxWidth: "300px", borderRadius: "8px" }}
+                      style={{
+                        width: "100%",
+                        maxWidth: "300px",
+                        borderRadius: "8px",
+                      }}
                       className="my-2"
                       onClick={() => setMediaData(item.url, item.type)}
                     >
@@ -195,7 +228,12 @@ export default function Message({
                 }
                 if (item.type.includes("audio")) {
                   return (
-                    <audio key={index} controls style={{ width: "100%", maxWidth: "300px" }} className="my-2">
+                    <audio
+                      key={index}
+                      controls
+                      style={{ width: "100%", maxWidth: "300px" }}
+                      className="my-2"
+                    >
                       <source src={item.url} type={item.type} />
                       Your browser does not support the audio tag.
                     </audio>
@@ -206,35 +244,89 @@ export default function Message({
             </Box>
           )}
           <section className="flex justify-between items-center gap-2">
-            <Typography variant="caption" sx={{ marginTop: "5px", color: isSender ? "#cfe2ff" : "#aaa", fontSize: "10px", textAlign: "right" }}>
+            <Typography
+              variant="caption"
+              sx={{
+                marginTop: "5px",
+                color: isSender ? "#cfe2ff" : "#aaa",
+                fontSize: "10px",
+                textAlign: "right",
+              }}
+            >
               {formatDate(time)}
             </Typography>
             {!isGroup && isSender && (
-              <img src={readReceipts === "read" ? ReadTick : readReceipts === "delivered" ? DoubleTick : readReceipts === "sent" ? SingleTick : NotSentIcon} alt="status" className="h-5 w-5" />
+              <img
+                src={
+                  readReceipts === "read"
+                    ? ReadTick
+                    : readReceipts === "delivered"
+                    ? DoubleTick
+                    : readReceipts === "sent"
+                    ? SingleTick
+                    : NotSentIcon
+                }
+                alt="status"
+                className="h-5 w-5"
+              />
             )}
           </section>
         </Box>
       </Container>
-      <DeletionDialogBox open={openDeleteDialog} handleClose={closeDialog} deleteHandler={deleteHandler} />
-      <MediaPreviewModal open={openMediPreview.isOpen} close={closeMediaPreview} url={openMediPreview.url} type={openMediPreview.type} />
+      <DeletionDialogBox
+        open={openDeleteDialog}
+        handleClose={closeDialog}
+        deleteHandler={deleteHandler}
+        isSender={isSender}
+      />
+      <MediaPreviewModal
+        open={openMediPreview.isOpen}
+        close={closeMediaPreview}
+        url={openMediPreview.url}
+        type={openMediPreview.type}
+      />
     </>
   );
 }
 
+function DeletionDialogBox({ open, handleClose, deleteHandler, isSender }) {
+  const [deleteOption, setDeleteOption] = useState("me");
 
-function DeletionDialogBox({ open, handleClose, deleteHandler }) {
   return (
-    <DialogComp
-      open={open}
-      handleClose={handleClose}
-      dialogTitle="Delete This Message"
-    >
-      <Typography variant="h6" className="text-red-500">
-        This Can Be Reverted Back. Are you Sure?
-      </Typography>
+    <Dialog open={open} onClose={handleClose}>
+      <DialogTitle>Delete message?</DialogTitle>
+      <DialogContent>
+        {isSender ? (
+          <>
+            <Typography>
+              You can delete messages for everyone or just for yourself.
+            </Typography>
+            <RadioGroup
+              value={deleteOption}
+              onChange={(e) => setDeleteOption(e.target.value)}
+            >
+              <FormControlLabel
+                value="me"
+                control={<Radio />}
+                label="Delete for me"
+              />
+              <FormControlLabel
+                value="everyone"
+                control={<Radio />}
+                label="Delete for everyone"
+              />
+            </RadioGroup>
+          </>
+        ) : (
+          <Typography>
+            This has no effect on your recipient's chat.!.
+          </Typography>
+        )}
+      </DialogContent>
       <DialogActions>
+        <Button onClick={handleClose}>Cancel</Button>
         <Button
-          onClick={deleteHandler}
+          onClick={() => deleteHandler(deleteOption)}
           sx={{
             backgroundColor: "red",
             color: "white",
@@ -254,6 +346,44 @@ function DeletionDialogBox({ open, handleClose, deleteHandler }) {
           Delete
         </Button>
       </DialogActions>
-    </DialogComp>
+    </Dialog>
   );
 }
+
+// function DeletionDialogBox({ open, handleClose, deleteHandler }) {
+//   const [deleteOption, setDeleteOption] = useState("me");
+
+//   return (
+//     <DialogComp
+//       open={open}
+//       handleClose={handleClose}
+//       dialogTitle="Delete message?"
+//     >
+//       <Typography variant="h6" className="text-red-500">
+//         This Can Be Reverted Back. Are you Sure?
+//       </Typography>
+//       <DialogActions>
+//         <Button
+//           onClick={deleteHandler}
+//           sx={{
+//             backgroundColor: "red",
+//             color: "white",
+//             textTransform: "none",
+//             fontWeight: "bold",
+//             padding: "8px 16px",
+//             borderRadius: "4px",
+//             border: "2px solid transparent",
+//             transition: "all 0.3s ease-in-out",
+//             "&:hover": {
+//               backgroundColor: "white",
+//               color: "red",
+//               border: "2px solid red",
+//             },
+//           }}
+//         >
+//           Delete
+//         </Button>
+//       </DialogActions>
+//     </DialogComp>
+//   );
+// }

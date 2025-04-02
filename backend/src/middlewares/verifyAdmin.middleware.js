@@ -11,10 +11,12 @@ const verifyAdmin = async (req, res, next) => {
     }
 
     // Find the group and check if the user is an admin
+    
     const group = await Group.findById(groupId);
     if (!group) {
       return res.status(404).json({ message: "Group not found." });
     }
+
 
     const isAdmin = group.members.some(
       (member) => member.userId.toString() === userId.toString() && member.role === "admin"

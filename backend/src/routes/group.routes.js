@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyUser } from "../middlewares/auth.middleware.js";
-import { addMembers, changeDescription, changeGroupIcon, clearGroupChat, creategroup, deleteGroupMessage, getChat, leaveGroup, makeAdmin, removeAdmin, removeMembers, sendGroupMessage } from "../controllers/group.controller.js";
+import { addMembers, changeDescription, changeGroupIcon, clearGroupChat, creategroup, deleteGroupMessage, deleteGroupMessageForEveryone, getChat, leaveGroup, makeAdmin, removeAdmin, removeMembers, sendGroupMessage } from "../controllers/group.controller.js";
 const router = express.Router();
 import multer from 'multer';
 import { storage } from "../config/cloudinary.config.js";
@@ -17,6 +17,9 @@ router.post("/sendMessage", verifyUser,upload.array("media",10), sendGroupMessag
 router.get("/:groupId/getMessages", verifyUser, getChat); 
 
 router.delete("/deleteGroupMessage/:messageId", verifyUser,deleteGroupMessage);
+
+
+router.delete("/deleteGroupMessage/deleteForEveryone/:messageId", verifyUser,deleteGroupMessageForEveryone);
 
 router.post("/addMembers/:groupId",verifyUser,verifyAdmin,addMembers);
 
