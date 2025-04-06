@@ -261,7 +261,7 @@ export default function Profile() {
       <ProfileDialog
         open={openUpdateProfileDialog}
         handleClose={closeProfileUpdateDialog}
-        data={userData}
+        userData={userData}
         handleNewProfilePic={handleNewProfilePic}
       />
     </>
