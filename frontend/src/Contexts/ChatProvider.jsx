@@ -7,14 +7,12 @@ import axios from "axios";
 
 // Create Chat Context
 const ChatContext = createContext();
-const socket = io(process.env.REACT_APP_API_URL, {
-  auth: {
-    userId: localStorage.getItem("token"),
-  },
-});
+// const socket = ;
 
 // ChatProvider Component
 export default function ChatProvider({ children }) {
+  const [socket, setSocket] = useState(null);
+
   const [newMessage, setNewMessage] = useState("");
   const [recipient, setRecipient] = useState("");
 
@@ -25,15 +23,15 @@ export default function ChatProvider({ children }) {
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [messageStatus, setMessageStatus] = useState("");
 
-  const [deleteMessageForEveryone,setDeleteMessageForEveryone] = useState("");
+  const [deleteMessageForEveryone, setDeleteMessageForEveryone] = useState("");
 
   const changeNewMessage = (mess) => {
     setNewMessage(mess);
   };
 
-  const changeDeleteMessageForEveryone = () =>{
+  const changeDeleteMessageForEveryone = () => {
     setDeleteMessageForEveryone("");
-  }
+  };
 
   const getUsers = async (email, showOtherUsers) => {
     try {
@@ -117,18 +115,17 @@ export default function ChatProvider({ children }) {
         isNotForCurrentUser: true,
       });
 
-      setUsers((old)=>{
-        return old?.map((user)=>{
-          if(user._id === newMessage.senderId){
+      setUsers((old) => {
+        return old?.map((user) => {
+          if (user._id === newMessage.senderId) {
             return {
               ...user,
-              unreadedMessagesCount : user.unreadedMessagesCount+1
-            }
+              unreadedMessagesCount: user.unreadedMessagesCount + 1,
+            };
           }
           return user;
-        })
-      })
-      
+        });
+      });
 
       toast(
         <ToastBox
@@ -164,13 +161,13 @@ export default function ChatProvider({ children }) {
   };
 
   const cameOnlineHandler = async ({ _id }) => {
-
+    
     if (recipient && recipient?._id === _id) {
       setRecipient(() => {
         return {
           ...recipient,
           isOnline: true,
-          isChanged:true
+          isChanged: true,
         };
       });
     }
@@ -189,14 +186,13 @@ export default function ChatProvider({ children }) {
   };
 
   const gotOfflineHandler = async ({ _id }) => {
-    if(recipient){
+    if (recipient) {
       if (recipient?._id === _id) {
         setRecipient(() => {
           return {
             ...recipient,
             isOnline: false,
-            isChanged:true
-
+            isChanged: true,
           };
         });
       }
@@ -225,7 +221,7 @@ export default function ChatProvider({ children }) {
           return {
             ...user,
             lastMessage: {
-              ...user.lastMessage, 
+              ...user.lastMessage,
               readReceipts: "read",
             },
           };
@@ -332,64 +328,77 @@ export default function ChatProvider({ children }) {
         return {
           ...old,
           isTyping: data?.isTyping,
-          typingHandling : true,
-          typer:data?.name
+          typingHandling: true,
+          typer: data?.name,
         };
       });
     } else {
     }
   };
 
-
-  const changeUnreadedMessageCount = () =>{
-    if(recipient && recipient?.unreadedMessagesCount > 0){
-      setUsers((old)=>{
-        return old?.map((user)=>{
-          if(user._id === recipient._id){
+  const changeUnreadedMessageCount = () => {
+    if (recipient && recipient?.unreadedMessagesCount > 0) {
+      setUsers((old) => {
+        return old?.map((user) => {
+          if (user._id === recipient._id) {
             return {
               ...user,
-              unreadedMessagesCount:0
-            }
+              unreadedMessagesCount: 0,
+            };
           }
-          return user
-        })
-      })
+          return user;
+        });
+      });
     }
-  }
+  };
 
-  const updateReadReceiptHandler = (data) =>{
+  const updateReadReceiptHandler = (data) => {
     // console.log(data)
     // if(data?.senderId === recipient._id){
     //   console.log(data)
     // }
-  }
+  };
 
-  const messageDeletedForEveryoneHandler = (data) =>{
+  const messageDeletedForEveryoneHandler = (data) => {
     try {
-      if(data.senderId === recipient?._id){
-        setDeleteMessageForEveryone(data.messageId)
+      if (data.senderId === recipient?._id) {
+        setDeleteMessageForEveryone(data.messageId);
       }
-    } catch (error) {
-      
-    }
-  }
+    } catch (error) {}
+  };
+
+  const userLoggedOut = () => {
+    socket?.emit("logout");
+  };
+
+  const loggedIn = () => {
+    socket.emit("loggedin");
+  };
 
   useEffect(() => {
+    setSocket(()=>
+      io(process.env.REACT_APP_API_URL, {
+        auth: {
+          userId: localStorage.getItem("token"),
+        },
+      })
+    );
+  }, []);
 
+  useEffect(() => {
+    console.log("called provider");
 
-
-    socket.on("connect", () => {
+    socket?.on("connect", () => {
       console.log("connected");
     });
-    socket.on("connect_error", (err) => {
+    socket?.on("connect_error", (err) => {
       console.log("Connection Error: ", err);
     });
-    socket.on("connect_failed", (err) => {
+    socket?.on("connect_failed", (err) => {
       console.log("Connection Failed: ", err);
     });
 
     socket?.on("newMessage", newMessageHandler);
-
 
     socket?.on("userBlocked", blockUserHandler);
 
@@ -414,14 +423,14 @@ export default function ChatProvider({ children }) {
 
     socket?.on("recipientTyping", recipientTypingHandler);
 
-    socket?.on("updateReadReceipt",updateReadReceiptHandler)
+    socket?.on("updateReadReceipt", updateReadReceiptHandler);
 
-    socket?.on("messageDeletedForEveryone",messageDeletedForEveryoneHandler)
+    socket?.on("messageDeletedForEveryone", messageDeletedForEveryoneHandler);
 
     changeUnreadedMessageCount();
 
     return () => {
-      socket.off("newMessage");
+      socket?.off("newMessage");
     };
   }, [recipient]);
 
@@ -447,7 +456,9 @@ export default function ChatProvider({ children }) {
         changeMessageStatus,
         handleTyping,
         deleteMessageForEveryone,
-        changeDeleteMessageForEveryone
+        changeDeleteMessageForEveryone,
+        userLoggedOut,
+        loggedIn,
       }}
     >
       {children}

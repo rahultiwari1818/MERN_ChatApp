@@ -9,7 +9,10 @@ import {
 } from "../utils/utils.js";
 import User from "../models/users.models.js";
 import { getReceiverSocketId, io, isUserOnline } from "../socket/app.socket.js";
-import { deleteFromCloudinary, uploadToCloudinary } from "../config/cloudinary.config.js";
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} from "../config/cloudinary.config.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
 import GroupMessages from "../models/groupMessages.model.js";
@@ -173,8 +176,9 @@ export const getConversations = async (req, res) => {
         select: "message media senderId timestamp readReceipts",
         populate: { path: "senderId", select: "_id email name profilePic" },
       })
-      .populate({path:"lastMessage",
-        select:"message media senderId timestamp _id readReceipts",
+      .populate({
+        path: "lastMessage",
+        select: "message media senderId timestamp _id readReceipts",
       })
       .sort({ lastMessageTime: -1 })
       .lean();
@@ -194,13 +198,16 @@ export const getConversations = async (req, res) => {
         otherParticipant.blockedUsers.filter(
           (user) => userId === user.toString()
         );
-        
-      const unreadedMessagesCount =  conv.messages.reduce((acc,mess)=>{
-        if(mess.senderId._id.toString() !== userId && mess.readReceipts !== "read"){
-          return acc+1;
+
+      const unreadedMessagesCount = conv.messages.reduce((acc, mess) => {
+        if (
+          mess.senderId._id.toString() !== userId &&
+          mess.readReceipts !== "read"
+        ) {
+          return acc + 1;
         }
         return acc;
-      },0)  
+      }, 0);
 
       return {
         _id: otherParticipant?._id,
@@ -209,12 +216,15 @@ export const getConversations = async (req, res) => {
         profilePic: otherParticipant?.profilePic || "",
         // messages: conv.messages || [],
         lastSeen: otherParticipant?.lastSeen,
-        lastMessage: {...conv.lastMessage,isSender:conv.lastMessage.senderId.toString() === userId},
+        lastMessage: {
+          ...conv.lastMessage,
+          isSender: conv.lastMessage.senderId.toString() === userId,
+        },
         lastMessageTime: conv.lastMessageTime,
         isBlocked: isBlocked?.length > 0,
         hasBlocked: hasBlocked?.length > 0,
         isOnline: isUserOnline(otherParticipant?._id),
-        unreadedMessagesCount:unreadedMessagesCount
+        unreadedMessagesCount: unreadedMessagesCount,
       };
     });
 
@@ -222,10 +232,10 @@ export const getConversations = async (req, res) => {
     const groupConversations = await Group.find({ "members.userId": userId })
       .populate("createdBy", "name profilePic")
       .populate("members.userId", "name profilePic email")
-      .populate({path:"lastMessage",
-        select:"message media senderId timestamp _id ",
+      .populate({
+        path: "lastMessage",
+        select: "message media senderId timestamp _id ",
         populate: { path: "senderId", select: "_id email name profilePic" },
-
       })
       .lean();
 
@@ -242,9 +252,11 @@ export const getConversations = async (req, res) => {
         .populate("senderId", "name profilePic")
         .lean();
 
-
-      group.lastMessage = {...group.lastMessage,isSender : group.lastMessage?.senderId?._id.toString() === userId},
-      group.lastMessageTime = lastMessage?.createdAt || group.updatedAt;
+      (group.lastMessage = {
+        ...group.lastMessage,
+        isSender: group.lastMessage?.senderId?._id.toString() === userId,
+      }),
+        (group.lastMessageTime = lastMessage?.createdAt || group.updatedAt);
       //   group.messages = groupMessages || [];
     }
 
@@ -255,26 +267,29 @@ export const getConversations = async (req, res) => {
 
       const groupMembers = group.members
         .map((member) => {
-            if(!isAdmin){
-                isAdmin = (userId === member.userId._id.toString() && member.role === "admin");
-            }
+          if (!isAdmin) {
+            isAdmin =
+              userId === member.userId._id.toString() &&
+              member.role === "admin";
+          }
           return {
             _id: member.userId._id,
-            name: member.userId._id.toString() === userId ? "You" : member.userId.name,
+            name:
+              member.userId._id.toString() === userId
+                ? "You"
+                : member.userId.name,
             email: member.userId.email,
             profilePic: member.userId.profilePic,
             role: member.role,
             lastSeen: member.lastSeen,
-            isYou : member.userId._id.toString() === userId,
+            isYou: member.userId._id.toString() === userId,
           };
         })
         .sort((a, b) => (a.role === "admin" ? -1 : 1));
 
+      // const unreadedMessagesCount = await  GroupMessages.countDocuments({
 
-        // const unreadedMessagesCount = await  GroupMessages.countDocuments({
-
-        // })
-
+      // })
 
       return {
         _id: group._id,
@@ -288,7 +303,6 @@ export const getConversations = async (req, res) => {
         lastMessageTime: group.lastMessageTime,
         isGroup: true,
         // unreadedMessagesCount:unreadedMessagesCount
-
       };
     });
 
@@ -488,12 +502,15 @@ export const changeProfilePic = async (req, res) => {
       });
     }
     const oldUserDetails = await User.findById(userId);
-    if(oldUserDetails.profilePic !== undefined && oldUserDetails.profilePic != ""){
+    if (
+      oldUserDetails.profilePic !== undefined &&
+      oldUserDetails.profilePic != ""
+    ) {
       const publicId = oldUserDetails.profilePic
         .split("/")
         .slice(-1)[0]
         .split(".")[0];
-       await deleteFromCloudinary(publicId);
+      await deleteFromCloudinary(publicId);
     }
 
     const newProfilePicPath = result.url;

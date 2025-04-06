@@ -1,15 +1,10 @@
 import React, { useCallback, useState } from "react";
 import axios from "axios";
-import {
-  Container,
-  Box,
-  TextField,
-  Button,
-  Typography,
-} from "@mui/material";
+import { Container, Box, TextField, Button, Typography } from "@mui/material";
 import OtpInput from "../OTPInput/OtpInput.jsx";
 import { toast } from "react-toastify";
 import Overlay from "../Common/Overlay.jsx";
+import GoogleLogin from "../GoogleLogin/GoogleLogin.jsx";
 
 export default function RegistrationForm() {
   const [data, setData] = useState({ name: "", email: "", password: "" });
@@ -178,6 +173,8 @@ export default function RegistrationForm() {
           >
             Register
           </Button>
+          <GoogleLogin isLogin={false} />
+
           {isOTPVisible && (
             <Box mt={3}>
               <Typography variant="h6" align="center" mb={2}>

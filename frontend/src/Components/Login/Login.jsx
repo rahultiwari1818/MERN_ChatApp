@@ -5,16 +5,21 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from "../../Contexts/AuthProvider";
 import ForgotPasswordModal from '../ForgotPasswordModal/ForgotPasswordModal';
+import GoogleLogin from '../GoogleLogin/GoogleLogin';
 
-export default function Login() {
+export default function  Login() {
 
     const { login } = useAuth();
+
+    
 
     const [data, setData] = useState({
         email: "",
         password: ""
     })
     const [showOverlay, setShowOverlay] = useState(false);
+
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setData({
@@ -49,6 +54,7 @@ export default function Login() {
             setShowOverlay(false)
         }
     }
+
 
     return (
         <>
@@ -105,6 +111,7 @@ export default function Login() {
                     >
                         Login
                     </Button>
+                        <GoogleLogin isLogin={true}/>
                     <button
                     type='button'
                         className='my-3 px-5 py-3 bg-red-500 text-white hover:text-red-500 hover:bg-white hover:outline hover:outline-red-500 rounded'
