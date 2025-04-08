@@ -122,11 +122,11 @@ export default function UserList({ handleClick }) {
       return updatedUserList;
     }
     return users;
-  }, [newMessage, users]); // Include `users` and `recipient` in dependencies
+  }, [newMessage?._id, users?.length]); // Include `users` and `recipient` in dependencies
 
 
   return (
-    <section className="h-screen px-10 overflow-scroll fixed bg-blue-300 text-white  z-10 lg:z-[0] w-full md:w-[30%] ">
+    <section className="h-screen px-10 overflow-scroll fixed bg-blue-300 text-white  z-10 lg:z-[0] w-full md:w-[60vw] lg:w-[30vw]  ">
       <Typography
         variant="h6"
         sx={{ mt: 2, mb: 2 }}
@@ -174,13 +174,17 @@ export default function UserList({ handleClick }) {
           ))
         }
 
-      </List>{
+      </List>
+      <div className='relative'>
+
+      {
         showOtherUsers
         ?
-        <CloseIcon onClick={closeShowOthers} className='fixed bottom-5 left-48  lg:left-[24rem] cursor-pointer rounded-full bg-white p-2 h-10 w-10'/>
+        <CloseIcon onClick={closeShowOthers} className='fixed bottom-5 left-[75vw!important] md:left-[50vw!important]  lg:left-[25vw!important] cursor-pointer rounded-full bg-white p-2 h-10 w-10'/>
         :
-      <img src={UserListIcon} alt='user list ' className='fixed bottom-5 left-48  lg:left-[24rem] cursor-pointer' onClick={()=>setShowOtherUsers(true)}/>
+      <img src={UserListIcon} alt='user list ' className='fixed bottom-5 left-[75vw!important] md:left-[50vw!important]  lg:left-[25vw!important] cursor-pointer' onClick={()=>setShowOtherUsers(true)}/>
       }
+      </div>
     </section>
   );
 }

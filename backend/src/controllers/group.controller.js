@@ -38,12 +38,53 @@ export const creategroup = async (req, res) => {
       createdBy: req.user._id,
       groupIcon,
     });
-    
+
+  
+    const populatedGroup = await Group.findById(newGroup._id).populate("members.userId", "-password");
+
+    const groupData = {};
+    groupData["name"] = populatedGroup.name;
+    groupData["_id"] = populatedGroup._id;
+    groupData["profilePic"] = populatedGroup.groupIcon || "";
+    groupData["description"] = populatedGroup.description || "";
+
+    groupData["lastMessage"] = populatedGroup.lastMessage;
+    groupData["lastMessageTime"] = populatedGroup.lastMessageTime;
+    groupData["isGroup"] = true;
+
+    let isAdmin = false;
+
+    const groupMembers = populatedGroup.members
+      .map((member) => {
+        if (!isAdmin) {
+          isAdmin =
+            req.user._id === member.userId._id.toString() &&
+            member.role === "admin";
+        }
+        return {
+          _id: member.userId._id,
+          name:
+            member.userId._id.toString() === req.user._id
+              ? "You"
+              : member.userId.name,
+          email: member.userId.email,
+          profilePic: member.userId.profilePic,
+          role: member.role,
+          lastSeen: member.lastSeen,
+          isYou: member.userId._id.toString() === req.user._id,
+        };
+      })
+      .sort((a, b) => (a.role === "admin" ? -1 : 1));
+
+    groupData["members"] = groupMembers;
+    groupData["isAdmin"] = isAdmin;
+
+
 
     return res.status(201).json({
       message: "Group Created Successfully",
       result: true,
-      group: newGroup,
+      data: groupData,
     });
   } catch (error) {
     console.error(error);
@@ -477,3 +518,38 @@ export const clearGroupChat = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+
+export const deleteMedia   = async(req,res) =>{
+  try {
+    const { mediaUrl } = req.body;
+
+    if (!mediaUrl) {
+      return res.status(400).json({ message: "mediaUrl is required" });
+    }
+
+    const messageId = req.params.id;
+
+
+    const publicId = mediaUrl
+      .split("/")
+      .slice(-1)[0]
+      .split(".")[0];
+
+    await deleteFromCloudinary(publicId);
+
+    const updatedMessage = await GroupMessages.findByIdAndUpdate(
+      messageId,
+      { $pull: { media: { url: mediaUrl } } },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "Media deleted successfully",
+      result: true,
+    });
+  } catch (error) {
+    console.error("Error While Clearing Group Chat:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}

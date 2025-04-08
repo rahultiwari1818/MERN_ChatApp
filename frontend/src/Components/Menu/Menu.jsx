@@ -25,6 +25,7 @@ export default function MenuBasic({ Title }) {
   };
 
   const closeCreateGroupDialog = () => {
+    
     setOpenGroupDialog(false);
   };
 

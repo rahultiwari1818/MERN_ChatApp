@@ -7,12 +7,14 @@ import axios from "axios";
 
 // Create Chat Context
 const ChatContext = createContext();
-// const socket = ;
+const socket = io(process.env.REACT_APP_API_URL, {
+  auth: {
+    userId: localStorage.getItem("token"),
+  },
+});
 
 // ChatProvider Component
 export default function ChatProvider({ children }) {
-  const [socket, setSocket] = useState(null);
-
   const [newMessage, setNewMessage] = useState("");
   const [recipient, setRecipient] = useState("");
 
@@ -32,6 +34,13 @@ export default function ChatProvider({ children }) {
   const changeDeleteMessageForEveryone = () => {
     setDeleteMessageForEveryone("");
   };
+
+  const addNewUser = (user) =>{
+   setUsers((oldUsers)=>{
+        return [user,...oldUsers]
+   })
+  }
+
 
   const getUsers = async (email, showOtherUsers) => {
     try {
@@ -161,7 +170,6 @@ export default function ChatProvider({ children }) {
   };
 
   const cameOnlineHandler = async ({ _id }) => {
-    
     if (recipient && recipient?._id === _id) {
       setRecipient(() => {
         return {
@@ -323,6 +331,9 @@ export default function ChatProvider({ children }) {
   };
 
   const recipientTypingHandler = (data) => {
+    // debugger;
+    // console.log(recipient,"rth")
+    if(!recipient || !recipient._id) return;
     if (data._id === recipient?._id) {
       setRecipient((old) => {
         return {
@@ -376,17 +387,15 @@ export default function ChatProvider({ children }) {
   };
 
   useEffect(() => {
-    setSocket(()=>
-      io(process.env.REACT_APP_API_URL, {
-        auth: {
-          userId: localStorage.getItem("token"),
-        },
-      })
-    );
-  }, []);
+    const token = localStorage.getItem("token");
+    if (token) {
+      socket?.connect();
+    }
+  }, [localStorage.getItem("token")]);
+
 
   useEffect(() => {
-    console.log("called provider");
+
 
     socket?.on("connect", () => {
       console.log("connected");
@@ -409,6 +418,7 @@ export default function ChatProvider({ children }) {
     socket?.on("userGoneOffline", gotOfflineHandler);
 
     if (recipient) {
+      changeUnreadedMessageCount();
       socket?.emit("markConversationAsRead", {
         senderId: recipient?._id,
         token: localStorage.getItem("token"),
@@ -427,12 +437,13 @@ export default function ChatProvider({ children }) {
 
     socket?.on("messageDeletedForEveryone", messageDeletedForEveryoneHandler);
 
-    changeUnreadedMessageCount();
+
+
 
     return () => {
       socket?.off("newMessage");
     };
-  }, [recipient]);
+  }, [recipient?._id]);
 
   return (
     <ChatContext.Provider
@@ -459,6 +470,7 @@ export default function ChatProvider({ children }) {
         changeDeleteMessageForEveryone,
         userLoggedOut,
         loggedIn,
+        addNewUser
       }}
     >
       {children}

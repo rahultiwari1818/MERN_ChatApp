@@ -1,4 +1,4 @@
-import { uploadToCloudinary } from "../config/cloudinary.config.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "../config/cloudinary.config.js";
 import Conversation from "../models/conversation.model.js";
 import Messages from "../models/messages.models.js";
 import User from "../models/users.models.js";
@@ -256,28 +256,28 @@ export const deleteForEveryone = async (req, res) => {
     }).populate("messages")
     ;
 
-    if(conversation.lastMessage._id === message._id){
-      if(conversation.messages.length > 1){
-        const n = conversation.messages.length;
-        let flag = false;
-        for(const i=n-1;i>=0;i--){
-          if(conversation.messages[i].deletedFor.length == 0){
-            conversation.lastMessage = conversation.messages[i]._id;
-            flag = true;
-            await conversation.save();
-            break;
-          }
-        }
-        if(!flag){
-          conversation.lastMessage = null;
-          await conversation.save();
-        }
-      }
-      else{
-         conversation.lastMessage = null;
-         await conversation.save();
-      }
-    }
+    // if(conversation.lastMessage._id === message._id){
+    //   if(conversation.messages.length > 1){
+    //     const n = conversation.messages.length;
+    //     let flag = false;
+    //     for(const i=n-1;i>=0;i--){
+    //       if(conversation.messages[i].deletedFor.length == 0){
+    //         conversation.lastMessage = conversation.messages[i]._id;
+    //         flag = true;
+    //         await conversation.save();
+    //         break;
+    //       }
+    //     }
+    //     if(!flag){
+    //       conversation.lastMessage = null;
+    //       await conversation.save();
+    //     }
+    //   }
+    //   else{
+    //      conversation.lastMessage = null;
+    //      await conversation.save();
+    //   }
+    // }
 
     // Soft delete: Add user to deletedFor array
     message.deletedFor.push(userId);
@@ -374,3 +374,42 @@ export const markAsRead = async (messageId) => {
     // return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+
+export const deleteMedia = async(req,res) =>{
+  try {
+    
+    const { mediaUrl } = req.body;
+
+    if (!mediaUrl) {
+      return res.status(400).json({ message: "mediaUrl is required" });
+    }
+
+    const messageId = req.params.id;
+
+    const publicId = mediaUrl
+      .split("/")
+      .slice(-1)[0]
+      .split(".")[0];
+
+    await deleteFromCloudinary(publicId);
+
+    const updatedMessage = await Messages.findByIdAndUpdate(
+      messageId,
+      { $pull: { media: { url: mediaUrl } } },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "Media deleted successfully",
+      result: true,
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error,
+    });
+  }
+}
+
