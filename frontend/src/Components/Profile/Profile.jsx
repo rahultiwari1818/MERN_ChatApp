@@ -40,6 +40,38 @@ export default function Profile() {
   //   setEditable((prev) => !prev);
   // };
 
+  const [editable, setEditable] = useState(false);
+
+  const handleSaveChanges = async () => {
+    try {
+      const { data } = await axios.patch(
+        `${process.env.REACT_APP_API_URL}/api/v1/users/updateName`,
+        { name: updatedData.name },
+        {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        }
+      );
+      toast.success(data.message || "Name updated successfully");
+      setEditable(false);
+      setUpdatedData((old)=>{
+        return {
+          ...old,
+          name:data.data.name
+        }
+      })
+      setUserData((old)=>{
+        return {
+          ...old,
+          name:data.data.name
+        }
+      })
+    } catch (err) {
+      toast.error("Failed to update name");
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUpdatedData((prev) => ({ ...prev, [name]: value }));
@@ -136,10 +168,27 @@ export default function Profile() {
                 label="Name"
                 variant="outlined"
                 margin="normal"
-                disabled={true}
+                disabled={!editable}
                 value={updatedData.name}
                 onChange={handleInputChange}
               />
+              <section className="flex gap-3 mt-2">
+                {!editable ? (
+                  <button
+                    className="bg-yellow-400 text-white rounded-md px-4 py-2 hover:bg-yellow-500"
+                    onClick={() => setEditable(true)}
+                  >
+                    Edit Name
+                  </button>
+                ) : (
+                  <button
+                    className="bg-green-500 text-white rounded-md px-4 py-2 hover:bg-green-600"
+                    onClick={handleSaveChanges}
+                  >
+                    Save Changes
+                  </button>
+                )}
+              </section>
 
               <TextField
                 fullWidth

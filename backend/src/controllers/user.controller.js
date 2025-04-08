@@ -625,3 +625,40 @@ export const resetPassword = async (req, res) => {
     return res.status(500).json({ message: "An error occurred.", error });
   }
 };
+
+
+export const updateName = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { name } = req.body;
+
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ message: "Name cannot be empty." });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name },
+      { new: true }
+    )
+      .select("-password")
+      .populate("blockedUsers", "-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    return res.status(200).json({
+      message: "Name updated successfully.",
+      data: updatedUser,
+      result:true
+
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error,
+      message: "Something went wrong.",
+    });
+  }
+};

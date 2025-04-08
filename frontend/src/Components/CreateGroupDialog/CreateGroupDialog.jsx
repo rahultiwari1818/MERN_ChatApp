@@ -16,7 +16,7 @@ export default function CreateGroupDialog({ open, handleClose }) {
         groupDescription:""
     });
 
-    const { users, getUsers } = useChat();
+    const { users, getUsers,addNewUser } = useChat();
 
     useEffect(() => {
         if (open) {
@@ -80,6 +80,8 @@ export default function CreateGroupDialog({ open, handleClose }) {
                 "Content-Type":"multipart/form-data"
             },
         });
+
+        addNewUser(response.data.data)
         
         handleClose();
     };

@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyUser } from "../middlewares/auth.middleware.js";
-import { addMembers, changeDescription, changeGroupIcon, clearGroupChat, creategroup, deleteGroupMessage, deleteGroupMessageForEveryone, getChat, leaveGroup, makeAdmin, removeAdmin, removeMembers, sendGroupMessage } from "../controllers/group.controller.js";
+import { addMembers, changeDescription, changeGroupIcon, clearGroupChat, creategroup, deleteGroupMessage, deleteGroupMessageForEveryone, deleteMedia, getChat, leaveGroup, makeAdmin, removeAdmin, removeMembers, sendGroupMessage } from "../controllers/group.controller.js";
 const router = express.Router();
 import multer from 'multer';
 import { storage } from "../config/cloudinary.config.js";
@@ -36,5 +36,8 @@ router.patch("/makeAdmin/:groupId",verifyUser,verifyAdmin,makeAdmin)
 router.delete("/clearGroupChat/:groupId",verifyUser,clearGroupChat);
 
 router.patch("/changeGroupIcon/:groupId",verifyUser,verifyAdmin,upload.single("photo"),changeGroupIcon);
+
+router.delete("/deleteMedia/:id",verifyUser,deleteMedia)
+
 
 export default router;

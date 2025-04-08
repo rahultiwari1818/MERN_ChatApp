@@ -8,7 +8,7 @@ import RecipientInfo from "../RecipientInfo/RecipientInfo";
 import { ReactComponent as CameraIcon } from "../../Assets/SVGs/CameraIcon.svg";
 import { toast } from "react-toastify";
 
-export default function ChatScreen({ changeTextBoxCss }) {
+export default function ChatScreen() {
   const [messageToBeSent, setMessageToBeSent] = useState("");
   const [messages, setMessages] = useState([]);
   const messageBoxRef = useRef(null);
@@ -51,8 +51,9 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
   const getMessages = async (isGroup) => {
     try {
-      if (!recipient) return;
+      if (!recipient?._id) return;
       setIsLoadingMessages(true);
+
 
       const url = isGroup
         ? `${process.env.REACT_APP_API_URL}/api/v1/group/${recipient?._id}/getMessages`
@@ -147,16 +148,17 @@ export default function ChatScreen({ changeTextBoxCss }) {
     });
   }, []);
 
+
   useEffect(() => {
     if (newMessage?.isSender) return;
     if (newMessage?.isNotForCurrentUser) return;
     setMessages((old) => [...old, newMessage]);
-  }, [newMessage]);
+  }, [newMessage?._id]);
 
   useEffect(() => {
     if(recipient?.typingHandling) return;
     getMessages(recipient?.isGroup);
-  }, [recipient]);
+  }, [recipient?._id]);
 
   // Ensure scrollToBottom is called after messages are updated
   useEffect(() => {
@@ -181,7 +183,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
       return updatedMessages;
     });
     changeMessageStatus();
-  }, [messageStatus]);
+  }, [messageStatus?._id]);
 
   useEffect(() => {
     if (!recipientConversationStatus) return;
@@ -212,7 +214,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
 
   return (
     <section
-      className={`h-[85vh] fixed right-0  top-[66px] lg:top-[85px] bg-image  overflow-hidden ${changeTextBoxCss}`}
+      className={`h-[85vh] fixed right-0  top-[66px] lg:top-[85px] bg-image  overflow-hidden w-full lg:w-[70vw]    `}
     >
       {recipient && (
         <RecipientInfo clearChatMessagesHandler={clearChatMessages} />
@@ -275,7 +277,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
       </Box>
       {recipient?.hasBlocked ? (
         <section
-          className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2  ${changeTextBoxCss} `}
+          className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2 w-full lg:w-[70vw]   `}
         >
           <Typography variant="h5" color="initial">
             You Are Blocked By {recipient.name}
@@ -283,7 +285,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
         </section>
       ) : recipient?.isBlocked ? (
         <section
-          className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2  ${changeTextBoxCss} `}
+          className={`fixed bottom-0 right-0 flex items-center justify-center bg-white py-3 border border-t-2 w-full lg:w-[70vw]   `}
         >
           <Typography variant="h5" color="initial">
             You Have Blocked {recipient.name}. Unblock {recipient.name} to Start
@@ -292,7 +294,7 @@ export default function ChatScreen({ changeTextBoxCss }) {
         </section>
       ) : (
         <section
-          className={`fixed bottom-0 right-0 flex items-center justify-center bg-white ${changeTextBoxCss}`}
+          className={`fixed bottom-0 right-0 flex items-center justify-center bg-white w-full lg:w-[70vw]   `}
         >
           {/* Hidden File Input */}
           {selectedFiles.length > 0 && (

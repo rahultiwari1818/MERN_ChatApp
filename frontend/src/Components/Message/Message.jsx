@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Container,
   Typography,
@@ -24,6 +24,7 @@ import SingleTick from "../../Assets/Images/SingleTick.png";
 import NotSentIcon from "../../Assets/Images/NotSentIcon.png";
 import MediaPreviewModal from "../Common/MediaPreviewModal";
 import { useChat } from "../../Contexts/ChatProvider";
+import DeletionDialogBox from "./DeletionDialogBox";
 
 export default function Message({
   message,
@@ -39,11 +40,20 @@ export default function Message({
   senderProfilePic,
 }) {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
+  const [medias,setMedias] = useState(media);
+
+  useEffect(()=>{
+   setMedias((old)=>media);
+  },[media]);
+
   const [openMediPreview, setOpenMediaPreview] = useState({
     isOpen: false,
     url: "",
     type: "",
   });
+
+
 
   const { recipient } = useChat();
 
@@ -65,36 +75,16 @@ export default function Message({
     });
   };
 
-  const deleteHandler = useCallback(async (deleteChat) => {
+  const deleteMedia = useCallback(async (deleteChat, mediaUrl) => {
     try {
-      if (!messageId) {
-        toast.error("Message ID is required.");
-        return;
-      }
-
-      
-
+      if (!messageId) return;
       if (readReceipts === "not sent") return;
 
-      
-
       const url = recipient?.isGroup
-        ? 
-          deleteChat === "me"
-          ?
-          `${process.env.REACT_APP_API_URL}/api/v1/group/deleteGroupMessage/${messageId}`
-          :
-          `${process.env.REACT_APP_API_URL}/api/v1/group/deleteGroupMessage/deleteForEveryone/${messageId}`
-
-        : 
-        deleteChat === "me"
-        ?
-        `${process.env.REACT_APP_API_URL}/api/v1/messages/${messageId}`
-        :
-        `${process.env.REACT_APP_API_URL}/api/v1/messages/deleteForEveryone/${messageId}`
-        ;
-
+        ? `${process.env.REACT_APP_API_URL}/api/v1/group/deleteMedia/${messageId}`
+        : `${process.env.REACT_APP_API_URL}/api/v1/messages/deleteMedia/${messageId}`;
       const response = await axios.delete(url, {
+        data: { mediaUrl: mediaUrl },
         headers: {
           Authorization: localStorage.getItem("token"),
         },
@@ -102,20 +92,64 @@ export default function Message({
 
       if (response.data.result) {
         toast.success(response.data.message || "Message deleted successfully.");
-        onDeletingMessage(messageId);
+        setMedias((old)=>{
+          return old.filter((media)=>{
+            return media.url !== mediaUrl
+          })
+        })
       } else {
         toast.error(response.data.message || "Failed to delete the message.");
       }
+
+      closeMediaPreview();
     } catch (error) {
-      console.error("Error while deleting the message:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "An error occurred while deleting the message."
-      );
-    } finally {
-      closeDialog();
+      console.log(error);
     }
-  }, [messageId]);
+  }, []);
+
+  const deleteHandler = useCallback(
+    async (deleteChat) => {
+      try {
+        if (!messageId) {
+          toast.error("Message ID is required.");
+          return;
+        }
+
+        if (readReceipts === "not sent") return;
+
+        const url = recipient?.isGroup
+          ? deleteChat === "me"
+            ? `${process.env.REACT_APP_API_URL}/api/v1/group/deleteGroupMessage/${messageId}`
+            : `${process.env.REACT_APP_API_URL}/api/v1/group/deleteGroupMessage/deleteForEveryone/${messageId}`
+          : deleteChat === "me"
+          ? `${process.env.REACT_APP_API_URL}/api/v1/messages/${messageId}`
+          : `${process.env.REACT_APP_API_URL}/api/v1/messages/deleteForEveryone/${messageId}`;
+        const response = await axios.delete(url, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        });
+
+        if (response.data.result) {
+          toast.success(
+            response.data.message || "Message deleted successfully."
+          );
+          onDeletingMessage(messageId);
+        } else {
+          toast.error(response.data.message || "Failed to delete the message.");
+        }
+      } catch (error) {
+        console.error("Error while deleting the message:", error);
+        toast.error(
+          error.response?.data?.message ||
+            "An error occurred while deleting the message."
+        );
+      } finally {
+        closeDialog();
+      }
+    },
+    [messageId]
+  );
 
   const closeDialog = useCallback(() => {
     setOpenDeleteDialog(false);
@@ -188,9 +222,9 @@ export default function Message({
           <Typography className="text-wrap text-xs md:text-sm lg:text-base">
             {message}
           </Typography>
-          {media?.length > 0 && (
+          {medias?.length > 0 && (
             <Box sx={{ marginTop: "10px" }}>
-              {media.map((item, index) => {
+              {medias.map((item, index) => {
                 if (item.type.includes("image")) {
                   return (
                     <img
@@ -284,71 +318,73 @@ export default function Message({
         close={closeMediaPreview}
         url={openMediPreview.url}
         type={openMediPreview.type}
+        deleteFunc={deleteMedia}
+        isSender={isSender}
       />
     </>
   );
 }
 
-function DeletionDialogBox({ open, handleClose, deleteHandler, isSender }) {
-  const [deleteOption, setDeleteOption] = useState("me");
+// function DeletionDialogBox({ open, handleClose, deleteHandler, isSender }) {
+//   const [deleteOption, setDeleteOption] = useState("me");
 
-  return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>Delete message?</DialogTitle>
-      <DialogContent>
-        {isSender ? (
-          <>
-            <Typography>
-              You can delete messages for everyone or just for yourself.
-            </Typography>
-            <RadioGroup
-              value={deleteOption}
-              onChange={(e) => setDeleteOption(e.target.value)}
-            >
-              <FormControlLabel
-                value="me"
-                control={<Radio />}
-                label="Delete for me"
-              />
-              <FormControlLabel
-                value="everyone"
-                control={<Radio />}
-                label="Delete for everyone"
-              />
-            </RadioGroup>
-          </>
-        ) : (
-          <Typography>
-            This has no effect on your recipient's chat.!.
-          </Typography>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button
-          onClick={() => deleteHandler(deleteOption)}
-          sx={{
-            backgroundColor: "red",
-            color: "white",
-            textTransform: "none",
-            fontWeight: "bold",
-            padding: "8px 16px",
-            borderRadius: "4px",
-            border: "2px solid transparent",
-            transition: "all 0.3s ease-in-out",
-            "&:hover": {
-              backgroundColor: "white",
-              color: "red",
-              border: "2px solid red",
-            },
-          }}
-        >
-          Delete
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
+//   return (
+//     <Dialog open={open} onClose={handleClose}>
+//       <DialogTitle>Delete message?</DialogTitle>
+//       <DialogContent>
+//         {isSender ? (
+//           <>
+//             <Typography>
+//               You can delete messages for everyone or just for yourself.
+//             </Typography>
+//             <RadioGroup
+//               value={deleteOption}
+//               onChange={(e) => setDeleteOption(e.target.value)}
+//             >
+//               <FormControlLabel
+//                 value="me"
+//                 control={<Radio />}
+//                 label="Delete for me"
+//               />
+//               <FormControlLabel
+//                 value="everyone"
+//                 control={<Radio />}
+//                 label="Delete for everyone"
+//               />
+//             </RadioGroup>
+//           </>
+//         ) : (
+//           <Typography>
+//             This has no effect on your recipient's chat.!.
+//           </Typography>
+//         )}
+//       </DialogContent>
+//       <DialogActions>
+//         <Button onClick={handleClose}>Cancel</Button>
+//         <Button
+//           onClick={() => deleteHandler(deleteOption)}
+//           sx={{
+//             backgroundColor: "red",
+//             color: "white",
+//             textTransform: "none",
+//             fontWeight: "bold",
+//             padding: "8px 16px",
+//             borderRadius: "4px",
+//             border: "2px solid transparent",
+//             transition: "all 0.3s ease-in-out",
+//             "&:hover": {
+//               backgroundColor: "white",
+//               color: "red",
+//               border: "2px solid red",
+//             },
+//           }}
+//         >
+//           Delete
+//         </Button>
+//       </DialogActions>
+//     </Dialog>
+//   );
+// }
 
 // function DeletionDialogBox({ open, handleClose, deleteHandler }) {
 //   const [deleteOption, setDeleteOption] = useState("me");
